@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pg4l_dir=$(dirname $0)
+pg4l_dir=$(dirname $(readlink -f $0))
 
 case $(cat /etc/issue | head -n 1) in
 	Arch*)

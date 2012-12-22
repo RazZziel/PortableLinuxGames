@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pg4l_dir=$(dirname $0)
+
 case $(cat /etc/issue | head -n 1) in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
@@ -138,26 +140,8 @@ fi
 
 [ -f AppRun ] || {
 	echo "Creating AppRun..."
-	cat > AppRun <<EOF
-#!/bin/bash
-
-APPDIR=\$(dirname \$(readlink -f "\${0}"))
-cd \${APPDIR}
-export LD_LIBRARY_PATH=\$PWD/usr/lib/:\${LD_LIBRARY_PATH}
-export PATH=\$PWD/usr/bin/:\${PATH}
-
-show_usage() {
-        USAGE_FILE=usage.txt
-        [ -f \$USAGE_FILE ] && {
-                echo "Usage:"
-                cat \$USAGE_FILE
-        }
-}
-
-[ -z "\$*" ] && show_usage
-
-./_BINARY_ \$@
-EOF
+	cp $pg4l_dir/AppRun .
+	#cp $pg4l_dir/AppRun.desktop .
 
 	chmod +x AppRun
 }

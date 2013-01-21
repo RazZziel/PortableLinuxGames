@@ -123,7 +123,7 @@ fi
 	
 	rubbish="usr/include usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig/ usr/lib/*.a .INSTALL .PKGINFO"
 	for i in $rubbish; do
-		[ -d "$i" ] && {
+		[ -e "$i" ] && {
 			echo "Deleting $i..."
 			rm -rf "$i"
 		}

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+function usage() { echo "$0 <image> <target>"; }
+
+image="$1"
+target="$2"
+mountpoint="/tmp/unpackAppImage"
+
+[ -z "$image" ] && { usage; exit 1; }
+[ -z "$target" ] && { usage; exit 1; }
+
+mkdir -p "$target"
+
+fuseiso -p "$image" "$mountpoint"
+cp -av "$mountpoint"/* "$target"/
+fusermount -u "$mountpoint"

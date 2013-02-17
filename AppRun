@@ -15,7 +15,7 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
-{ ./_BINARY_ $@; wait; }
+./_BINARY_ $@
 
 ret=$?
 [ $ret != 0 ] && {

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+AppImageAssistantDir="$(dirname $(readlink -f "$0"))/AppImageAssistant 0.9"
+[ -d "$AppImageAssistantDir" ] || { echo "Could not find $AppImageAssistantDir"; exit 1; }
+
+DesktopFile=$(ls -1 *.desktop | head -n1)
+[ -n "$DesktopFile" ] || { echo "No package found"; exit 1; }
+
+PackageName=$(egrep Name $DesktopFile | head -n1 | cut -d= -f2).run
+
+rm -if "../$PackageName"
+echo "Building package in ../${PackageName}..."
+
+export LD_LIBRARY_PATH="$AppImageAssistantDir/usr/lib"
+"$AppImageAssistantDir/package" . "../$PackageName"

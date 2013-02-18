@@ -17,7 +17,12 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
-./_BINARY_ $@ > $LOGFILE 2>&1
+[[ $(tty) = "not a tty" ]] && {
+	./_BINARY_ $@ > $LOGFILE 2>&1
+} || {
+	./_BINARY_ $@
+}
+
 
 ret=$?
 [ $ret != 0 ] && {

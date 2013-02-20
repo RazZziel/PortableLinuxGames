@@ -6,7 +6,7 @@ case $(cat /etc/issue | head -n 1) in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-[0-9]*.pkg.tar.xz 2>/dev/null| head -n1; }
+		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-[^-]*-[^-]*-[^.]*.pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		download_packages() { sudo pacman -Sw --noconfirm $@; }
 		;;

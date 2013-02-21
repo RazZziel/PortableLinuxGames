@@ -17,6 +17,7 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
+cd usr/bin/
 [[ $(tty) = "not a tty" ]] && {
 	./_BINARY_ $@ > $LOGFILE 2>&1
 } || {

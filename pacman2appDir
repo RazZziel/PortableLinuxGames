@@ -6,6 +6,7 @@ case $(cat /etc/issue | head -n 1) in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
+		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-[^-]*-[^-]*-[^.]*.pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		download_packages() { sudo pacman -Sw --noconfirm $@; }
@@ -13,6 +14,7 @@ case $(cat /etc/issue | head -n 1) in
 	Ubuntu* | Debian*)
 		find_dependencies_package() { apt-get info $1; }
 		find_dependencies_file() { dpkg info $1; }
+		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
 		find_file_for_package() { pkg=$1; ls -1t /var/cache/dpkg/$1-[0-9]*.pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { dpkg -d $1; }
 		download_packages() { apt-get download $@; }
@@ -23,56 +25,55 @@ case $(cat /etc/issue | head -n 1) in
 		;;
 esac
 
-MODE="pkg"
+DOWNLOAD=1
+UNPACK=1
+CLEANUP=1
+BRINGUP=1
 
+AUTOCOPYLIBS=
+
+
+
+MainPackageExec=
+MainPackageVersion=
+
+pkgs=
+files=
+ignore="hicolor-icon-theme"
+
+
+# Recolect list of packages
 for i in $@; do
 	case $i in
-		pkg)
-			MODE="pkg"
+		--skip-download) DOWNLOAD=; shift ;;
+		--skip-unpack) UNPACK=; shift ;;
+		--skip-cleanup) CLEANUP=; shift ;;
+		--skip-bringup) BRINGUP=; shift ;;
+		--auto-copy-libs) AUTOCOPYLIBS=1; shift ;;
+
+		-*)
+			ignore+=" ${i#*-}"
 			;;
-		ldd)
-			MODE="ldd"
+		*)
+			if [ -f $i ]; then
+				# Argument is a file
+				files+=" $i"
+				pkgs+=" $(find_dependencies_file $i)"
+			else
+				# Argument is the name of a package
+				pkgs+=" $i"
+				pkgs+=" $(find_dependencies_package $i)"
+			fi
 			;;
 	esac
 done
 
-pkgs=
-files=
-
-# Recolect list of packages
-if [ $MODE = "pkg" ]; then
-
-	for i in $@; do
-		case $i in
-			-*)
-				ignore+=" ${i#*-}"
-				;;
-			*)
-				if [ -f $i ]; then
-					# Argument is a file
-					files+=" $i"
-					pkgs+=" $(find_dependencies_file $i)"
-				else
-					# Argument is the name of a package
-					pkgs+=" $i"
-					pkgs+=" $(find_dependencies_package $i)"
-				fi
-				;;
-		esac
-	done
-
-elif [ $mode = "ldd" ]; then
-
-	bin=$1
-	for i in $(ldd $bin); do
-		true
-	done
-
-fi
-
 
 # Download and unpack packages
-[ "$pkgs" -o "$files" ] || { echo "Nothing to do"; exit; }
+[ "$pkgs" -o "$files" ] || {
+	echo "Nothing to do";
+	exit 1;
+}
 
 [ "$files" ] && {
 	echo "These files will be included:"
@@ -80,70 +81,161 @@ fi
 		echo "  $i"
 	done
 }
-	
-[ "$pkgs" ] && {
-	echo "These packages will be included:"
 
-	for i in $ignore; do
-		echo "Ignoring $i..."
-		pkgs=${pkgs//$i/}
-	done
-
-	for i in $pkgs; do
-		pkgs=${pkgs//$i/${i%%[<>=]*}}
-	done
-
-	for i in $pkgs; do
-		echo "  $i"
-	done
+[ "$pkgs" ] || {
+	echo "No packages found";
+	exit 1;
 }
 
 
-[ "$pkgs" ] && {
+echo "These packages will be included:"
+
+for i in $ignore; do
+	echo "Ignoring $i..."
+	pkgs=${pkgs//$i/}
+done
+
+for i in $pkgs; do
+	pkgs=${pkgs//$i/${i%%[<>=]*}}
+done
+
+for i in $pkgs; do
+	echo "  $i"
+done
+
+
+[ "$DOWNLOAD" ] && {
 	# Make sure all packages are downloaded
 	download_packages $pkgs || exit
-
-	# Find the file corresponding with each package
-	for i in $pkgs; do
-		f=$(find_file_for_package $i)
-	
-		if [ -f "$f" ]; then
-			files+=" $f"
-		else
-		       	echo "!! Could not find $i"
-		fi
-	done
+} || {
+	echo "Skipping download"
 }
 
-[ "$files" ] && {
+# Find the file corresponding with each package
+for i in $pkgs; do
+	f=$(find_file_for_package $i)
+
+	if [ -f "$f" ]; then
+		files+=" $f"
+	else
+	       	echo "!! Could not find file for package '$i'"
+	fi
+done
+
+[ "$files" ] || {
+	echo "!! No files found";
+	exit 1;
+}
+
+for i in $files; do
+	[ "$MainPackageVersion" ] || {
+		MainPackageVersion=$(find_version_file $i)
+		echo "Assuming main package is $i with version $MainPackageVersion"
+	}
+done
+
+[ "$UNPACK" ] && {
 	for i in $files; do
 		echo "Uncompressing $i..."
 		uncompress_package_file $i
 	done
-	
-	rubbish="usr/include usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig/ usr/lib/*.a .INSTALL .PKGINFO"
+} || {
+	echo "Skipping unpack"
+}
+
+
+[ "$BRINGUP" ] && {
+	for i in $(ls -1 usr/share/applications/*.desktop 2>/dev/null); do
+		PackageName=$(egrep Name $i | head -n1 | cut -d= -f2)
+		PackageExec=$(egrep Exec $i | head -n1 | cut -d= -f2)
+		PackageIcon=$(egrep Icon $i | head -n1 | cut -d= -f2)
+
+		[ "$MainPackageExec" ] || {
+			MainPackageExec=$(basename $PackageExec)
+
+			IconFile="./$PackageIcon"
+			[ -f "$IconFile" ] || IconFile=usr/share/pixmaps/$PackageIcon
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.png)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.* | head -n1)
+			[ -f "$IconFile" ] && {
+				echo "Using icon on $IconFile"
+				convert -resize 48x "$IconFile" AppRun.png
+				optipng AppRun.png 2>/dev/null
+			} || {
+				echo "! Icon $PackageIcon not found"
+				echo "usr/share/pixmaps:"
+				find usr/share/pixmaps
+			}
+		}
+
+		[ -f "./$PackageExec" ] && {
+			echo "Patching absolute paths in ./$PackageExec"
+			sed -e "s/\/usr\//\.\/..\//g" ./$PackageExec -i
+			sed -e "s/\/opt\//\.\/..\//g" ./$PackageExec -i
+		}
+
+		[ -f AppRun.desktop ] || {
+			[ "$MainPackageVersion" ] || MainPackageVersion=_VERSION_
+			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
+			cp $pg4l_dir/AppRun.desktop .
+
+			sed -e"s/Name=.*/Name=$PackageName $MainPackageVersion-r1/" AppRun.desktop -i
+		}
+
+	done
+
+	[ -f AppRun ] || {
+		[ "$MainPackageExec" ] || MainPackageExec="_BINARY_"
+
+		echo "Creating AppRun with Exec='${MainPackageExec}'..."
+		cp $pg4l_dir/AppRun .
+		
+		sed -e"s/_BINARY_/$MainPackageExec/g" AppRun -i
+		chmod +x AppRun
+	}
+
+	rm -vf usr/bin/{ar,as,nm,gprof,elfedit,ld,ld.*,objcopy,objdump,makehrtf,c++filt,addr2line,curl,*-config,*-info,png2pnm,pnm2png,ranlib,readelf,size,strings,strip,wxrc*,xml2-config,xmlcatalog,xmllint,glewinfo,visualinfo,cjpeg,desktop-file-*,djpeg,jpegtran,lua,luac,rdjpgcom,update-desktop-database,wrjpgcom}
+
+	# Actually, patch'em all, for good measure.
+	sed -e "s/\/usr\//\.\/..\//g" usr/bin/* -i
+	sed -e "s/\/opt\//\.\/..\//g" usr/bin/* -i
+
+	echo "Possible missing libraries: (use --auto-copy-libs to copy them into usr/lib/)"
+	for i in $(LD_LIBRARY_PATH=$PWD/usr/lib/ ldd usr/bin/* \
+		| grep -v "$PWD" \
+		| grep -v "usr/bin/" \
+		| grep -v "not a dynamic executable" \
+		| grep -v "linux-gate.so" \
+		| grep -v "ld-linux.so" \
+		| grep -v "libc.so" \
+		| grep -v "libgcc_s.so" \
+		| grep -v "libstdc++.so" \
+		| grep -v "libm.so" \
+		| grep -v "libdl.so" \
+		| grep -v "librt.so" \
+		| grep -v "libdrm.so" \
+		| grep -v "libpthread.so" \
+		| grep -v "libxcb" \
+		| grep -v "libX" \
+		| cut -d" " -f3 | sort | uniq)
+	do
+		[ $AUTOCOPYLIBS ] && cp -v $i usr/lib/ || echo "  $i"
+	done
+} || {
+	echo "Skipping bringup"
+}
+
+
+[ "$CLEANUP" ] && {
+	rubbish="etc usr/include usr/share/applications usr/share/pixmaps usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
 	for i in $rubbish; do
 		[ -e "$i" ] && {
 			echo "Deleting $i..."
 			rm -rf "$i"
 		}
 	done
-
-	for i in $(ls -1 usr/share/applications/*.desktop 2>/dev/null); do
-		sed -e"s/Exec=.*/Exec=AppRun/" $i -i
-		mv -v $i .
-	done
-	rmdir usr/share/applications/ 2>/dev/null
-
-	echo "Icons: $(ls -1 usr/share/pixmaps/*.{png,xpm})"
+	echo # ??
+} || {
+	echo "Skipping cleanup"
 }
-
-[ -f AppRun ] || {
-	echo "Creating AppRun..."
-	cp $pg4l_dir/AppRun .
-	#cp $pg4l_dir/AppRun.desktop .
-
-	chmod +x AppRun
-}
-
 

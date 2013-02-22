@@ -2,12 +2,14 @@
 
 pg4l_dir=$(dirname $(readlink -f $0))
 
+shopt -s extglob # Enable extended globs
+
 case $(cat /etc/issue | head -n 1) in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-[^-]*-[^-]*-[^.]*.pkg.tar.xz 2>/dev/null| head -n1; }
+		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		download_packages() { sudo pacman -Sw --noconfirm $@; }
 		;;
@@ -15,7 +17,7 @@ case $(cat /etc/issue | head -n 1) in
 		find_dependencies_package() { apt-get info $1; }
 		find_dependencies_file() { dpkg info $1; }
 		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
-		find_file_for_package() { pkg=$1; ls -1t /var/cache/dpkg/$1-[0-9]*.pkg.tar.xz 2>/dev/null| head -n1; }
+		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { dpkg -d $1; }
 		download_packages() { apt-get download $@; }
 		;;
@@ -82,34 +84,30 @@ done
 	done
 }
 
-[ "$pkgs" ] || {
-	echo "No packages found";
-	exit 1;
+[ "$pkgs" ] && {
+	for i in $ignore; do
+		echo "Ignoring $i..."
+		pkgs=${pkgs//$i/}
+	done
+
+	for i in $pkgs; do
+		pkgs=${pkgs//$i/${i%%[<>=]*}}
+	done
+
+	echo "These packages will be included:"
+
+	for i in $pkgs; do
+		echo "  $i"
+	done
 }
 
 
-echo "These packages will be included:"
-
-for i in $ignore; do
-	echo "Ignoring $i..."
-	pkgs=${pkgs//$i/}
-done
-
-for i in $pkgs; do
-	pkgs=${pkgs//$i/${i%%[<>=]*}}
-done
-
-for i in $pkgs; do
-	echo "  $i"
-done
-
-
-[ "$DOWNLOAD" ] && {
+if [ "$DOWNLOAD" ]; then
 	# Make sure all packages are downloaded
 	download_packages $pkgs || exit
-} || {
+else
 	echo "Skipping download"
-}
+fi
 
 # Find the file corresponding with each package
 for i in $pkgs; do
@@ -134,14 +132,14 @@ for i in $files; do
 	}
 done
 
-[ "$UNPACK" ] && {
+if [ "$UNPACK" ]; then
 	for i in $files; do
 		echo "Uncompressing $i..."
 		uncompress_package_file $i
 	done
-} || {
+else
 	echo "Skipping unpack"
-}
+fi
 
 
 [ "$BRINGUP" ] && {
@@ -150,22 +148,28 @@ done
 		PackageExec=$(egrep Exec $i | head -n1 | cut -d= -f2)
 		PackageIcon=$(egrep Icon $i | head -n1 | cut -d= -f2)
 
+		echo "Found .desktop file '$PackageName' ($PackageExec)"
+
 		[ "$MainPackageExec" ] || {
 			MainPackageExec=$(basename $PackageExec)
+			echo "  Using it as main program"
 
 			IconFile="./$PackageIcon"
 			[ -f "$IconFile" ] || IconFile=usr/share/pixmaps/$PackageIcon
+			[ -f "$IconFile" ] || IconFile=usr/share/icons/$PackageIcon
 			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.png)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.png)
 			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.* | head -n1)
-			[ -f "$IconFile" ] && {
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.* | head -n1)
+			if [ -f "$IconFile" ]; then
 				echo "Using icon on $IconFile"
 				convert -resize 48x "$IconFile" AppRun.png
 				optipng AppRun.png 2>/dev/null
-			} || {
+			else
 				echo "! Icon $PackageIcon not found"
 				echo "usr/share/pixmaps:"
 				find usr/share/pixmaps
-			}
+			fi
 		}
 
 		[ -f "./$PackageExec" ] && {
@@ -226,7 +230,7 @@ done
 }
 
 
-[ "$CLEANUP" ] && {
+if [ "$CLEANUP" ]; then
 	rubbish="etc usr/include usr/share/applications usr/share/pixmaps usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
 	for i in $rubbish; do
 		[ -e "$i" ] && {
@@ -234,8 +238,6 @@ done
 			rm -rf "$i"
 		}
 	done
-	echo # ??
-} || {
+else
 	echo "Skipping cleanup"
-}
-
+fi

@@ -1,0 +1,130 @@
+Mini-tutorial: Let's package FlightGear.
+
+Long story short:
+
+
+	$ pacman2appDir flightgear -subversion --auto-copy-libs
+	$ buildAppImage
+
+
+Short story long:
+
+
+	$ mkdir flightgear
+	$ cd flightgear
+	$ pacman2appDir flightgear
+
+
+	These packages will be included:
+	  flightgear
+	  simgear
+	  libxmu
+	  libxi
+	  zlib
+	  openscenegraph
+	  subversion
+	  libxrandr
+	  glu
+	  flightgear-data
+	[sudo] password for raziel:
+
+
+Oops! For some reason, FlightGear depends on subversion, we don't really want
+that, so we ignore it:
+
+
+	$ pacman2appDir flightgear -subversion
+
+
+	Ignoring subversion...
+	These packages will be included:
+	  flightgear
+	  simgear
+	  libxmu
+	  libxi
+	  zlib
+	  openscenegraph
+	  libxrandr
+	  glu
+	  flightgear-data
+	[sudo] password for raziel: 
+	resolving dependencies...
+
+	Targets (10): plib-1.8.5-4  flightgear-2.10.0-1  flightgear-data-2.10.0-1  glu-9.0.0-1  libxi-1.6.2-1  libxmu-1.1.1-1  libxrandr-1.4.0-1  openscenegraph-3.0.1-8
+	              simgear-2.10.0-1  zlib-1.2.7-1
+
+	Total Download Size:    0.00 MiB
+	
+	Proceed with download? [Y/n] 
+	(10/10) checking package integrity                          [-------------------------------------------------------------] 100%
+	Assuming main package is /var/cache/pacman/pkg/flightgear-2.10.0-1-i686.pkg.tar.xz with version 2.10.0
+	Uncompressing /var/cache/pacman/pkg/flightgear-2.10.0-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/simgear-2.10.0-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/libxmu-1.1.1-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/libxi-1.6.2-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/zlib-1.2.7-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/openscenegraph-3.0.1-8-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/libxrandr-1.4.0-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/glu-9.0.0-1-i686.pkg.tar.xz...
+	Uncompressing /var/cache/pacman/pkg/flightgear-data-2.10.0-1-any.pkg.tar.xz...
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	tar: Ignoring unknown extended header keyword `SCHILY.fflags'
+	Found .desktop file 'FlightGear' (fgfs --fg-root)
+	  Using it as main program
+	ls: cannot access usr/share/pixmaps/flightgear.png: No such file or directory
+	ls: cannot access usr/share/pixmaps/flightgear.*: No such file or directory
+	! Icon flightgear not found
+	usr/share/pixmaps:
+	find: `usr/share/pixmaps': No such file or directory
+	Possible missing libraries: (use --auto-copy-libs to copy them into usr/lib/)
+	  /usr/lib/libglapi.so.0
+	  /usr/lib/libGL.so.1
+	  /usr/lib/libglut.so.3
+	  /usr/lib/libopenal.so.1
+	  /usr/lib/libpng15.so.15
+	  /usr/lib/libsystemd-daemon.so.0
+	  /usr/lib/libudev.so.1
+	Deleting usr/include...
+	Deleting usr/share/applications...
+	Deleting usr/share/man...
+	Deleting usr/share/doc...
+	Deleting usr/lib/pkgconfig...
+	Deleting usr/lib/libSimGearCore.a...
+	Deleting usr/lib/libSimGearScene.a...
+	Deleting usr/lib/libXrandr.a...
+	Deleting usr/lib/libz.a...
+	Deleting .PKGINFO...
+
+
+Mnh, the script warns that there are some "Possible missing libraries", and they look
+important, so let's make the script add them:
+
+
+	$ pacman2appDir flightgear -subversion --auto-copy-libs
+
+
+	...
+	Possible missing libraries: (use --auto-copy-libs to copy them into usr/lib/)
+	‘/usr/lib/libglapi.so.0’ -> ‘usr/lib/libglapi.so.0’
+	‘/usr/lib/libGL.so.1’ -> ‘usr/lib/libGL.so.1’
+	‘/usr/lib/libglut.so.3’ -> ‘usr/lib/libglut.so.3’
+	‘/usr/lib/libopenal.so.1’ -> ‘usr/lib/libopenal.so.1’
+	‘/usr/lib/libpng15.so.15’ -> ‘usr/lib/libpng15.so.15’
+	‘/usr/lib/libsystemd-daemon.so.0’ -> ‘usr/lib/libsystemd-daemon.so.0’
+	‘/usr/lib/libudev.so.1’ -> ‘usr/lib/libudev.so.1’
+	...
+
+
+Done, now let's package it
+
+
+	$ buildAppImage
+
+
+There, done!

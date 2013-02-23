@@ -17,16 +17,11 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
+ret=-1
 cd usr/bin/
-[[ $(tty) = "not a tty" ]] && {
-	./_BINARY_ $@ > $LOGFILE 2>&1
-} || {
-	./_BINARY_ $@
-}
+{ ./_BINARY_ $@; ret=$?; } 2>&1 | tee $LOGFILE
 
-
-ret=$?
-[ $ret != 0 ] && {
+[ $ret != 0 -a $ret != -1 ] && {
 	echo "<html><body>" > "${LOGFILE}.html"
 	echo "<p>Looks like the package has crashed, sorry about that!</p>" >> "${LOGFILE}.html"
 	echo "<p>Please help us fix this error sending this log file to <a href='mailto:tux@portablelinuxgames.org'>tux@portablelinuxgames.org</a>, if possible commenting how the game crashed.</p>" >> "${LOGFILE}.html"
@@ -49,5 +44,5 @@ ret=$?
 	echo "</pre>" >> "${LOGFILE}.html"
 
 	echo "</body></html>" >> "${LOGFILE}.html"
-	xdg-open "${LOGFILE}.html"
+	xdg-open "${LOGFILE}.html" &
 }

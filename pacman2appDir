@@ -70,7 +70,6 @@ for i in $@; do
 	esac
 done
 
-
 # Download and unpack packages
 [ "$pkgs" -o "$files" ] || {
 	echo "Nothing to do";
@@ -84,6 +83,7 @@ done
 	done
 }
 
+pkgs+=" xdg-utils"
 [ "$pkgs" ] && {
 	for i in $ignore; do
 		echo "Ignoring $i..."
@@ -151,24 +151,29 @@ fi
 		echo "Found .desktop file '$PackageName' ($PackageExec)"
 
 		[ "$MainPackageExec" ] || {
-			MainPackageExec=$(basename $PackageExec)
 			echo "  Using it as main program"
+			MainPackageExec=$(basename $PackageExec)
 
 			IconFile="./$PackageIcon"
 			[ -f "$IconFile" ] || IconFile=usr/share/pixmaps/$PackageIcon
 			[ -f "$IconFile" ] || IconFile=usr/share/icons/$PackageIcon
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.png)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.png)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.* | head -n1)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.* | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.png 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.png 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.* 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.* 2>/dev/null | head -n1)
+
 			if [ -f "$IconFile" ]; then
 				echo "Using icon on $IconFile"
 				convert -resize 48x "$IconFile" AppRun.png
+				[ -f "AppRun-0.png" ] && {
+					mv -v AppRun-0.png AppRun.png
+					rm -v AppRun-?.png
+				}
 				optipng AppRun.png 2>/dev/null
 			else
-				echo "! Icon $PackageIcon not found"
-				echo "usr/share/pixmaps:"
-				find usr/share/pixmaps
+				echo "! Icon $PackageIcon not found" >&2
+				echo "usr/share/pixmaps:" >&2
+				find usr/share/pixmaps >&2
 			fi
 		}
 
@@ -179,7 +184,10 @@ fi
 		}
 
 		[ -f AppRun.desktop ] || {
-			[ "$MainPackageVersion" ] || MainPackageVersion=_VERSION_
+			[ "$MainPackageVersion" ] || {
+				"! Main package version not found, using _VERSION_" >&2
+				MainPackageVersion=_VERSION_
+			}
 			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
 			cp $pg4l_dir/AppRun.desktop .
 
@@ -189,7 +197,10 @@ fi
 	done
 
 	[ -f AppRun ] || {
-		[ "$MainPackageExec" ] || MainPackageExec="_BINARY_"
+		[ "$MainPackageExec" ] || {
+			echo "! Main package executable not found, using _BINARY_"
+			MainPackageExec="_BINARY_"
+		}
 
 		echo "Creating AppRun with Exec='${MainPackageExec}'..."
 		cp $pg4l_dir/AppRun .
@@ -231,7 +242,7 @@ fi
 
 
 if [ "$CLEANUP" ]; then
-	rubbish="etc usr/include usr/share/applications usr/share/pixmaps usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
+	rubbish="etc usr/include usr/share/applications usr/share/desktop-directories usr/share/pixmaps usr/share/icons usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
 	for i in $rubbish; do
 		[ -e "$i" ] && {
 			echo "Deleting $i..."

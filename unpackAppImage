@@ -3,11 +3,13 @@
 function usage() { echo "$0 <image> <target>"; }
 
 image="$1"
-target="$2"
+target="${2:-$(basename "$image" .run)}"
 mountpoint="/tmp/unpackAppImage"
 
 [ -z "$image" ] && { usage; exit 1; }
 [ -z "$target" ] && { usage; exit 1; }
+
+echo "Unpacking \"${image}\" on \"${target}\"..."
 
 mkdir -p "$target"
 

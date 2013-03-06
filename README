@@ -102,29 +102,50 @@ that, so we ignore it:
 	Deleting .PKGINFO...
 
 
-Mnh, the script warns that there are some "Possible missing libraries", and they look
-important, so let's make the script add them:
-
-
-	$ pacman2appDir flightgear -subversion --auto-copy-libs
-
-
-	...
-	Possible missing libraries: (use --auto-copy-libs to copy them into usr/lib/)
-	‘/usr/lib/libglapi.so.0’ -> ‘usr/lib/libglapi.so.0’
-	‘/usr/lib/libGL.so.1’ -> ‘usr/lib/libGL.so.1’
-	‘/usr/lib/libglut.so.3’ -> ‘usr/lib/libglut.so.3’
-	‘/usr/lib/libopenal.so.1’ -> ‘usr/lib/libopenal.so.1’
-	‘/usr/lib/libpng15.so.15’ -> ‘usr/lib/libpng15.so.15’
-	‘/usr/lib/libsystemd-daemon.so.0’ -> ‘usr/lib/libsystemd-daemon.so.0’
-	‘/usr/lib/libudev.so.1’ -> ‘usr/lib/libudev.so.1’
-	...
-
-
 Done, now let's package it
 
 
 	$ buildAppImage
+
+
+	Building package in ../FlightGear 2.10.0-r2.run...
+	Creating /home/raziel/packaging/staging/FlightGear 2.10.0-r2.run...
+	xorriso 0.4.8 : RockRidge filesystem manipulator, libburnia project.
+
+	xorriso : UPDATE : Thank you for being patient for 1 seconds
+	Drive current: -dev '/home/raziel/packaging/staging/FlightGear 2.10.0-r2.run'
+	Media current: stdio file, overwriteable
+	Media status : is blank
+	Media summary: 0 sessions, 0 data blocks, 0 data, 1313m free
+	Volume id    : 'ISOIMAGE'
+	xorriso : UPDATE : 13823 files added in 1 seconds
+	Added to ISO image: directory '/'='/home/raziel/packaging/staging/FlightGear 2.10.0-archlinux-r1'
+	xorriso : UPDATE : 1 files added in 1 seconds
+	Added to ISO image: file '/.DirIcon'='/home/raziel/packaging/staging/FlightGear 2.10.0-archlinux-r1/AppRun.png'
+	xorriso : UPDATE : 9 file filters processed in 2 seconds
+	xorriso : UPDATE : 39 file filters processed in 3 seconds
+	xorriso : UPDATE : 53 file filters processed in 4 seconds
+	...
+	xorriso : UPDATE : 12258 file filters processed in 236 seconds
+	xorriso : UPDATE : 12261 file filters processed in 236 seconds
+	xorriso : UPDATE : Writing:       2192s    0.5%   fifo   0%  buf  50%
+	xorriso : UPDATE : Writing:       2254s    0.6%   fifo   0%  buf  50%  
+	...
+	xorriso : UPDATE : Writing:     403042s   99.8%   fifo   0%  buf  50%    3.1xD 
+	ISO image produced: 403939 sectors
+	Written to media  : 403968 sectors at LBA 32
+	Writing to '/home/raziel/packaging/staging/FlightGear 2.10.0-r2.run' completed sucessfully.
+
+	ok
+	Embedding icon into runtime...
+
+	Embedding runtime into the header of /home/raziel/packaging/staging/FlightGear 2.10.0-r2.run...
+	ok
+	Making /home/raziel/packaging/staging/FlightGear 2.10.0-r2.run executable...
+	ok
+	Size: 789.062500 MB
+
+
 
 
 There, done!

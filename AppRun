@@ -1,7 +1,8 @@
 #!/bin/bash
 
-APPDIR=$(dirname $(readlink -f "$0"))
+APPDIR=$(dirname "$(readlink -f "$0")")
 LOGFILE="/tmp/package.log"
+BINARY=_BINARY_
 
 cd "${APPDIR}"
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
@@ -17,9 +18,9 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
-ret=-1
+ret=0
 cd usr/bin/
-{ ./_BINARY_ $@; ret=$?; } 2>&1 | tee $LOGFILE
+{ ../lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
 
 [ $ret != 0 -a $ret != -1 ] && {
 	echo "<html><body>" > "${LOGFILE}.html"
@@ -29,12 +30,12 @@ cd usr/bin/
 
 	echo "<h2>Game output</h2>" >> "${LOGFILE}.html"
 	echo "<pre>" >> "${LOGFILE}.html"
-	cat ${LOGFILE} >> "${LOGFILE}.html"
+	cat "${LOGFILE}" >> "${LOGFILE}.html"
 	echo "</pre>" >> "${LOGFILE}.html"
 	
 	echo "<h2>ldd output</h2>" >> "${LOGFILE}.html"
 	echo "<pre>" >> "${LOGFILE}.html"
-	ldd _BINARY_ >> "${LOGFILE}.html"
+	ldd "$BINARY" >> "${LOGFILE}.html"
 	echo "</pre>" >> "${LOGFILE}.html"
 
 	echo "<h2>System information</h2>" >> "${LOGFILE}.html"

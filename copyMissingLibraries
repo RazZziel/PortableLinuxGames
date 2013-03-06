@@ -1,0 +1,38 @@
+#!/bin/bash
+
+EXCEPTIONS=libGL.so.1
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:usr/lib/
+
+function findFiles() {
+	find -iname *.so
+	find -iname *.so.*
+	ls -1 ./usr/bin/*
+}
+
+function extractDependencies() {
+	echo $(ldd $@ | grep "not found" | sort | uniq) >&2
+	ldd $@ 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | cut -d" " -f3 | sort | uniq
+}
+
+prev_libs=
+while true; do
+	libs=$(extractDependencies $(findFiles))
+
+	for i in $EXCEPTIONS; do
+		echo "Ignoring $i"
+                libs=${pkgs//$i/}
+        done
+
+	for i in $libs; do
+		[ -f usr/lib/$(basename $i) ] || cp -v $i usr/lib/
+	done
+
+	# If no new libraries have been found, break the loop
+	if [ "$prev_libs" = "$libs" ]; then
+		break;
+	fi
+
+	prev_libs=$libs
+done
+
+cp -v /lib/ld-linux.so.2 usr/lib/

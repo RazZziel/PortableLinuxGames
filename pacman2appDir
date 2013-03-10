@@ -38,6 +38,7 @@ AUTOCOPYLIBS=1
 
 MainPackageExec=
 MainPackageVersion=
+Suffix=archlinux
 
 pkgs=
 files=
@@ -190,7 +191,7 @@ fi
 			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
 			cp $pg4l_dir/AppRun.desktop .
 
-			sed -e"s/Name=.*/Name=$PackageName $MainPackageVersion-r1/" AppRun.desktop -i
+			sed -e"s/Name=.*/Name=$PackageName $MainPackageVersion-$Suffix-r1/" AppRun.desktop -i
 		}
 
 	done

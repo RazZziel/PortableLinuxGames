@@ -10,8 +10,8 @@ function findFiles() {
 }
 
 function extractDependencies() {
-	echo $(ldd $@ | grep "not found" | sort | uniq) >&2
-	ldd $@ 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | cut -d" " -f3 | sort | uniq
+	ldd $@ | grep "not found" | sort | uniq >&2
+	ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
 }
 
 prev_libs=
@@ -30,7 +30,11 @@ while true; do
         done
 
 	for i in $libs; do
-		[ -f usr/lib/$(basename $i) ] || cp -v "$i" usr/lib/
+		lib=usr/lib/$(basename "$i")
+		if [ ! -f "$lib" ]; then
+			cp -v "$i" "$lib"
+			chmod +x "$lib"
+		fi
 	done
 
 	# If no new libraries have been found, break the loop

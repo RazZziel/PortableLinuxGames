@@ -6,7 +6,12 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:usr/lib/
 function findFiles() {
 	find -iname *.so
 	find -iname *.so.*
-	ls -1 ./usr/bin/*
+	
+	[ -d "usr/bin/" ] && find "usr/bin/" -type f -perm /a+x
+
+	for i in $@; do
+		find "$i" -type f -perm /a+x
+	done
 }
 
 function extractDependencies() {
@@ -16,7 +21,7 @@ function extractDependencies() {
 
 prev_libs=
 while true; do
-	libs=$(extractDependencies $(findFiles))
+	libs=$(extractDependencies $(findFiles $@))
 
 	for i in $EXCEPTIONS; do
 		#echo "Ignoring $i"

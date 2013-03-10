@@ -3,7 +3,7 @@ Mini-tutorial: Let's package FlightGear.
 Long story short:
 
 
-	$ pacman2appDir flightgear -subversion --auto-copy-libs
+	$ pacman2appDir flightgear -subversion
 	$ buildAppImage
 
 

@@ -19,12 +19,18 @@ while true; do
 	libs=$(extractDependencies $(findFiles))
 
 	for i in $EXCEPTIONS; do
-		echo "Ignoring $i"
-                libs=${pkgs//$i/}
+		#echo "Ignoring $i"
+                #libs=${libs//$i/}
+		for j in $libs; do
+			[[ "$j" =~ "$i" ]] && {
+				echo "Ignoring $j"
+				libs=${libs//$j/}
+			}
+		done
         done
 
 	for i in $libs; do
-		[ -f usr/lib/$(basename $i) ] || cp -v $i usr/lib/
+		[ -f usr/lib/$(basename $i) ] || cp -v "$i" usr/lib/
 	done
 
 	# If no new libraries have been found, break the loop

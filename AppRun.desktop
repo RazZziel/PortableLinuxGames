@@ -2,3 +2,4 @@
 Name=
 Exec=AppRun
 Icon=AppRun.png
+StartupNotify=true

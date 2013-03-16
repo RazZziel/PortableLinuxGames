@@ -19,6 +19,8 @@ function extractDependencies() {
 	ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
 }
 
+mkdir -p usr/lib
+
 prev_libs=
 while true; do
 	libs=$(extractDependencies $(findFiles $@))

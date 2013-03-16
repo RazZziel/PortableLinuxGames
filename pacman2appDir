@@ -32,6 +32,7 @@ UNPACK=1
 CLEANUP=1
 BRINGUP=1
 
+AUTO=
 AUTOCOPYLIBS=1
 
 
@@ -54,11 +55,13 @@ for i in $@; do
 		--skip-bringup) BRINGUP=; shift ;;
 		--skip-auto-copy-libs) AUTOCOPYLIBS=; shift ;;
 
+		-a) AUTO=1; shift ;;
+
 		-*)
 			ignore+=" ${i#*-}"
 			;;
 		*)
-			if [ -f $i ]; then
+			if [ -f "$i" ]; then
 				# Argument is a file
 				files+=" $i"
 				pkgs+=" $(find_dependencies_file $i)"
@@ -130,6 +133,11 @@ for i in $files; do
 	[ "$MainPackageVersion" ] || {
 		MainPackageVersion=$(find_version_file $i)
 		echo "Assuming main package is $i with version $MainPackageVersion"
+
+		if [ $AUTO ]; then
+			mkdir -p "$i" || exit 1
+			cd "$i" || exit 1
+		fi
 	}
 done
 

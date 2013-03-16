@@ -1,0 +1,48 @@
+#!/bin/bash
+
+APPDIR=$(dirname "$(readlink -f "$0")")
+LOGFILE="/tmp/package.log"
+BINARY=_BINARY_
+
+cd "${APPDIR}"
+export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
+export PATH=$PWD/usr/bin/:${PATH}
+
+show_usage() {
+        USAGE_FILE=usage.txt
+        [ -f $USAGE_FILE ] && {
+                echo "Usage:"
+                cat $USAGE_FILE
+        }
+}
+
+[ -z "$*" ] && show_usage
+
+ret=0
+{ ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
+
+[ $ret != 0 -a $ret != -1 ] && {
+	echo "<html><body>" > "${LOGFILE}.html"
+	echo "<p>Looks like the package has crashed, sorry about that!</p>" >> "${LOGFILE}.html"
+	echo "<p>Please help us fix this error sending this log file to <a href='mailto:tux@portablelinuxgames.org'>tux@portablelinuxgames.org</a>, if possible commenting how the game crashed.</p>" >> "${LOGFILE}.html"
+	echo "The binary returned $ret" >> "${LOGFILE}.html"
+
+	echo "<h2>Game output</h2>" >> "${LOGFILE}.html"
+	echo "<pre>" >> "${LOGFILE}.html"
+	cat "${LOGFILE}" >> "${LOGFILE}.html"
+	echo "</pre>" >> "${LOGFILE}.html"
+	
+	echo "<h2>ldd output</h2>" >> "${LOGFILE}.html"
+	echo "<pre>" >> "${LOGFILE}.html"
+	ldd "$BINARY" >> "${LOGFILE}.html"
+	echo "</pre>" >> "${LOGFILE}.html"
+
+	echo "<h2>System information</h2>" >> "${LOGFILE}.html"
+	echo "<pre>" >> "${LOGFILE}.html"
+	cat /etc/issue >> "${LOGFILE}.html"
+	uname -a >> "${LOGFILE}.html"
+	echo "</pre>" >> "${LOGFILE}.html"
+
+	echo "</body></html>" >> "${LOGFILE}.html"
+	xdg-open "${LOGFILE}.html" &
+}

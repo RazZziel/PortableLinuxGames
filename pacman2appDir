@@ -14,8 +14,8 @@ case $(cat /etc/issue | head -n 1) in
 		uncompress_package_file() { tar -xf $1; }
 		download_package() {
 			case "$1" in
-			aur*)
-				pkg=${1#aur:}
+			aur/*)
+				pkg=${1#*/}
 				[ $(find_file_for_package "$pkg") ] && { echo "Package $pkg already downloaded"; return; }
 
 				echo "Building $pkg ..."
@@ -140,7 +140,7 @@ fi
 
 # Find the file corresponding with each package
 for i in $pkgs; do
-	pkg=${i#aur:}
+	pkg=${i#*/}
 	file=$(find_file_for_package $pkg)
 
 	if [ -f "$file" ]; then

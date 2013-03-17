@@ -20,7 +20,7 @@ show_usage() {
 
 ret=0
 cd usr/bin/
-{ ../lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
+{ $APPDIR/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
 
 [ $ret != 0 -a $ret != -1 ] && {
 	echo "<html><body>" > "${LOGFILE}.html"

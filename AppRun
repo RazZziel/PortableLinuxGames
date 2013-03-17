@@ -8,6 +8,9 @@ cd "${APPDIR}"
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
 export PATH=$PWD/usr/bin/:${PATH}
 
+get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
+set_resolution() { xrandr -s $1; }
+
 show_usage() {
         USAGE_FILE=usage.txt
         [ -f $USAGE_FILE ] && {
@@ -18,9 +21,13 @@ show_usage() {
 
 [ -z "$*" ] && show_usage
 
+resolution=$(get_resolution)
+
 ret=0
 cd usr/bin/
 { $APPDIR/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
+
+[ "$(get_resolution)" != "$resolution" ] && set_resolution "$resolution"
 
 [ $ret != 0 -a $ret != -1 ] && {
 	echo "<html><body>" > "${LOGFILE}.html"

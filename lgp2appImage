@@ -22,30 +22,30 @@ function xml_extract_property() {
 
 [ -z "$*" ] && {
 	echo "Usage: "
-	echo "  $0 <loki_installer.run> [options]"
+	echo "  $0 <lgp_installer.run> [options]"
 	echo "Options:"
 	echo "  --skip-extract: Skip extract of the makeself package"
 	echo "  --skip-cleanup: Skip cleanup of temporal directories"
 	echo "  --skip-appimage: Skip creation of AppImage"
-	echo "  --loki-unpacker: Use loki installer to extract the package data"
+	echo "  --lgp-unpacker: Use lgp installer to extract the package data"
 }
 
 EXTRACT=1
 CLEANUP=1
 APPIMAGE=1
-USE_LOKI_UNPACKER=
+USE_LGP_UNPACKER=
 
 for i in $@; do
         case $i in
                 --skip-extract) EXTRACT=; shift ;;
                 --skip-cleanup) CLEANUP=; shift ;;
                 --skip-appimage) APPIMAGE=; shift ;;
-                --loki-unpacker) USE_LOKI_UNPACKER=1; shift ;;
+                --lgp-unpacker) USE_LGP_UNPACKER=1; shift ;;
 		*) pkg=$i; shift ;;
 	esac
 done
 
-[ -n "$pkg" ] || die "No loki installer specified"
+[ -n "$pkg" ] || die "No lgp installer specified"
 
 target="$PWD/${pkg}_uncompressed"
 appDirPath="$PWD/${pkg}_AppDir"
@@ -131,13 +131,13 @@ IFS=$OIFS
 [ -n "$iconPath" ] || die "Could not find icon path"
 
 
-if [ $USE_LOKI_UNPACKER ]; then
+if [ $USE_LGP_UNPACKER ]; then
 	cd "$target"
 	binDir="$PWD/_BIN_"
 	option="lololoki"
 	echo "Running $installScript ..."
 	./$installScript -v 0 -i "$appDirPath" -b "$binDir" -o "$option"
-	reset # Just in case loki installer fucks shit up
+	reset # Just in case lgp installer fucks shit up
 
 else
 	mkdir -p "$appDirPath"
@@ -187,7 +187,7 @@ optipng "$appDirPath"/AppRun.png >/dev/null
 
 cd "$appDirPath"
 cp $pg4l_dir/AppRun.desktop .
-Suffix=-loki
+Suffix=-lgp
 sed -e"s/Name=.*/Name=$packageName r1$Suffix/" AppRun.desktop -i
 
 echo "Creating AppRun with Exec='$binFilename'..."

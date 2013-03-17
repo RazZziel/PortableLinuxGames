@@ -1,0 +1,94 @@
+#!/bin/bash
+
+pg4l_dir=$(dirname $(readlink -f $0))
+
+OIFS=$IFS
+NIFS=$'\n'
+export _POSIX2_VERSION=199209 # Needed to unpack old loki packages
+
+function die() { echo $@; exit 1; }
+function trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
+function trim() { echo $@ | trimp; }
+function extract_property() {
+	local property="$1"
+	local file="$2"
+	grep "$property:" "$file" | cut -d: -f2 | trimp
+}
+
+[ -z "$*" ] && {
+	echo "Usage: "
+	echo "  $0 <loki_installer.run> [options]"
+	echo "Options:"
+	echo "  --skip-extract: Skip extract of the makeself package"
+	echo "  --skip-cleanup: Skip cleanup of temporal directories"
+	echo "  --skip-appimage: Skip creation of AppImage"
+	echo "  --loki-unpacker: Use loki installer to extract the package data"
+}
+
+EXTRACT=1
+CLEANUP=1
+APPIMAGE=1
+
+for i in $@; do
+        case $i in
+                --skip-extract) EXTRACT=; shift ;;
+                --skip-cleanup) CLEANUP=; shift ;;
+                --skip-appimage) APPIMAGE=; shift ;;
+		*) pkg=$i; shift ;;
+	esac
+done
+
+[ -n "$pkg" ] || die "No loki installer specified"
+
+target="$PWD/${pkg}_uncompressed"
+appDirPath="$PWD/${pkg}_AppDir"
+
+[ -d "$target" ] && rm -rI "$target"
+[ -d "$appDirPath" ] && rm -rI "$appDirPath"
+
+installScript=$(sh "$pkg" --info | tail -n2 | head -n1 | trimp)
+[ -n "$installScript" ] || die "Could not find 'install script'"
+
+if [ $EXTRACT ]; then
+	echo
+	echo "*** Running Loki installer, press 'n' twice when the installer asks you ***"
+	echo
+	sh "$pkg" --keep --target "$target" #|| die "Could not unpack package"
+fi
+
+cd "$target" || exit 1
+
+configFile="patch.dat"
+[ -n "$configFile" ] || die "Could not find config file"
+
+# Find package name
+packageName=$(extract_property "Component" "$configFile")
+packageVersion=$(extract_property "Version" "$configFile")
+
+[ -n "$packageName" ] || die "Could not find package name"
+[ -n "$packageVersion" ] || die "Could not find package version"
+echo "Package: $packageName $packageVersion ($packageExecutable)"
+
+mv -v data/demos/* "$appDirPath" || die "Could not move data to AppDir"
+
+cd "$appDirPath"
+find -type f -exec bash -c "mv \"{}\" \"{}.gz\" && gunzip -vf \"{}.gz\" || mv \"{}.gz\" \"{}\""  ';'
+
+packageExecutable=$(ls -1 *.x86 | head -n1)
+[ -n "$packageVersion" ] || die "Could not find package executable"
+chmod +x "$packageExecutable"
+rm -vf *.sparc64 *.ppc *.alpha
+
+$pg4l_dir/quickAppDir "$packageExecutable"
+Suffix=-loki
+sed -e"s/Name=.*/Name=$packageName $packageVersion-r1$Suffix/" AppRun.desktop -i
+
+#echo "Creating AppRun with Exec='$binFilename'..."
+#$pg4l_dir/buildAppImage || die "Could not build AppImage"
+
+if [ $CLEANUP ]; then
+	echo "Removing $target"
+	rm -rf "$target"
+#	echo "Removing $appDirPath"
+#	rm -rf "$appDirPath"
+fi

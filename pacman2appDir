@@ -12,7 +12,28 @@ case $(cat /etc/issue | head -n 1) in
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
-		download_packages() { sudo pacman -Swdd --noconfirm $@; }
+		download_package() {
+			case "$1" in
+			aur*)
+				pkg=${1#aur:}
+				[ $(find_file_for_package "$pkg") ] && { echo "Package $pkg already downloaded"; return; }
+
+				echo "Building $pkg ..."
+				pushd /tmp || exit 1
+					yaourt -G "$pkg" || exit 1
+					pushd "$pkg" || exit 1
+						makepkg -d || exit 1
+						f=$(echo ${pkg}*.pkg.tar.xz)
+						sudo mv -v "$f" /var/cache/pacman/pkg/ || exit 1
+					popd
+					rm -rf "$pkg"
+				popd
+				;;
+			*)
+				sudo pacman -Swdd --noconfirm "$1"
+				;;
+			esac
+		}
 		;;
 	Ubuntu* | Debian*)
 		find_dependencies_package() { apt-get info $1; }
@@ -21,7 +42,7 @@ case $(cat /etc/issue | head -n 1) in
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { dpkg -d $1; }
-		download_packages() { apt-get download $@; }
+		download_package() { apt-get download "$1"; }
 		;;
 	*)
 		echo "Distro not supported"
@@ -110,19 +131,23 @@ pkgs+=" xdg-utils"
 
 if [ "$DOWNLOAD" ]; then
 	# Make sure all packages are downloaded
-	download_packages $pkgs || exit
+	for pkg in $pkgs; do
+		download_package "$pkg" || exit
+	done
 else
 	echo "Skipping download"
 fi
 
 # Find the file corresponding with each package
 for i in $pkgs; do
-	f=$(find_file_for_package $i)
+	pkg=${i#aur:}
+	file=$(find_file_for_package $pkg)
 
-	if [ -f "$f" ]; then
-		files+=" $f"
+	if [ -f "$file" ]; then
+		files+=" $file"
 	else
-	       	echo "!! Could not find file for package '$i'"
+	       	echo "!! Could not find file for package '$pkg'"
+		exit 1
 	fi
 done
 
@@ -138,7 +163,7 @@ for i in $files; do
 
 		if [ "$AUTO" ]; then
 			package_name=$(find_package_file $i)
-			mkdir -p "$package_name" || exit 1
+			mkdir -pv "$PWD/$package_name" || exit 1
 			cd "$package_name" || exit 1
 		fi
 	}
@@ -227,6 +252,7 @@ fi
 
 	if [ $AUTOCOPYLIBS ]; then
 		echo "Copying missling libraries..."
+		chmod +x usr/lib/*.so*
 		$pg4l_dir/copyMissingLibraries
 	fi
 } || {

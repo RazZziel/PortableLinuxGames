@@ -10,7 +10,8 @@ function findFiles() {
 	[ -d "usr/bin/" ] && find "usr/bin/" -type f -perm /a+x
 
 	for i in $@; do
-		find "$i" -type f -perm /a+x
+		[ -d "$i" ] && find "$i" -type f -perm /a+x
+		[ -f "$i" ] && echo "$i"
 	done
 }
 

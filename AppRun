@@ -25,7 +25,7 @@ resolution=$(get_resolution)
 
 ret=0
 cd usr/bin/
-{ $APPDIR/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
+{ "$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
 
 [ "$(get_resolution)" != "$resolution" ] && set_resolution "$resolution"
 

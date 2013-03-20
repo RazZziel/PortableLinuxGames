@@ -261,7 +261,7 @@ fi
 
 
 if [ "$CLEANUP" ]; then
-	rubbish="etc usr/include usr/share/applications usr/share/desktop-directories usr/share/pixmaps usr/share/icons usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
+	rubbish="usr/include usr/share/applications usr/share/desktop-directories usr/share/pixmaps usr/share/icons usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
 	for i in $rubbish; do
 		[ -e "$i" ] && {
 			echo "Deleting $i..."

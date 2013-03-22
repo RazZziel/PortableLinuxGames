@@ -48,7 +48,7 @@ done
 [ -n "$pkg" ] || die "No lgp installer specified"
 
 target="$PWD/${pkg}_uncompressed"
-appDirPath="$PWD/${pkg}_AppDir"
+appDirPath="$PWD/${pkg}.AppDir"
 
 installScript=$(sh "$pkg" --info | tail -n2 | head -n1 | trimp)
 [ -n "$installScript" ] || die "Could not find 'install script'"

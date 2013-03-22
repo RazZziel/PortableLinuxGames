@@ -2,7 +2,7 @@
 
 APPDIR=$(dirname "$(readlink -f "$0")")
 LOGFILE="/tmp/package.log"
-BINARY=_BINARY_
+BINARY=bin/_BINARY_
 
 cd "${APPDIR}"
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
@@ -24,7 +24,7 @@ show_usage() {
 resolution=$(get_resolution)
 
 ret=0
-cd usr/bin/
+cd usr/
 { "$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
 
 [ "$(get_resolution)" != "$resolution" ] && set_resolution "$resolution"

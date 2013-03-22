@@ -55,7 +55,7 @@ UNPACK=1
 CLEANUP=1
 BRINGUP=1
 
-AUTO=
+CREATE_APPDIR=1
 AUTOCOPYLIBS=1
 
 
@@ -78,7 +78,7 @@ for i in $@; do
 		--skip-bringup) BRINGUP=; shift ;;
 		--skip-auto-copy-libs) AUTOCOPYLIBS=; shift ;;
 
-		-a) AUTO=1; shift ;;
+		--here) CREATE_APPDIR=; shift ;;
 
 		-*)
 			ignore+=" ${i#*-}"
@@ -109,6 +109,9 @@ done
 		echo "  $i"
 	done
 }
+
+# Automatically substitute virtual package libjpeg with a real package
+pkgs=${pkgs//libjpeg/libjpeg-turbo}
 
 pkgs+=" xdg-utils"
 [ "$pkgs" ] && {
@@ -157,16 +160,18 @@ done
 }
 
 for i in $files; do
-	[ "$MainPackageVersion" ] || {
+	if [ ! "$MainPackageVersion" ]; then
 		MainPackageVersion=$(find_version_file $i)
 		echo "Assuming main package is $i with version $MainPackageVersion"
 
-		if [ "$AUTO" ]; then
+		if [ "$CREATE_APPDIR" ]; then
 			package_name=$(find_package_file $i)
-			mkdir -pv "$PWD/$package_name" || exit 1
-			cd "$package_name" || exit 1
+			appDir_path=$PWD/${package_name}.AppDir
+			echo "Using AppDir $appDir_path ..."
+			mkdir -pv "$appDir_path" || exit 1
+			cd "$appDir_path" || exit 1
 		fi
-	}
+	fi
 done
 
 if [ "$UNPACK" ]; then

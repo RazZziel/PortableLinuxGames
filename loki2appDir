@@ -41,7 +41,7 @@ done
 [ -n "$pkg" ] || die "No loki installer specified"
 
 target="$PWD/${pkg}_uncompressed"
-appDirPath="$PWD/${pkg}_AppDir"
+appDirPath="$PWD/${pkg}.AppDir"
 
 [ -d "$target" ] && rm -rI "$target"
 [ -d "$appDirPath" ] && rm -rI "$appDirPath"

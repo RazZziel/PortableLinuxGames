@@ -64,9 +64,9 @@ MainPackageExec=
 MainPackageVersion=
 Suffix=-archlinux
 
-pkgs=
-files=
-ignore="hicolor-icon-theme"
+declare -a pkgs=()
+declare -a files=()
+declare -a ignore=("hicolor-icon-theme")
 
 
 # Recolect list of packages
@@ -81,18 +81,24 @@ for i in $@; do
 		--here) CREATE_APPDIR=; shift ;;
 
 		-*)
-			ignore+=" ${i#*-}"
+			ignore+=("${i#*-}")
 			;;
 		*)
 			if [ -f "$i" ]; then
 				# Argument is a file
-				files+=" $i"
-				pkgs+=" $(find_dependencies_file $i)"
+				files+=("$i")
+				for dep in $(find_dependencies_file $i); do
+					pkgs+=("$dep")
+				done
+
 			else
 				# Argument is the name of a package
-				pkgs+=" $i"
-				pkgs+=" $(find_dependencies_package $i)"
+				pkgs+=("$i")
+				for dep in $(find_dependencies_package $i); do
+					pkgs+=("$dep")
+				done
 			fi
+
 			;;
 	esac
 done
@@ -110,31 +116,34 @@ done
 	done
 }
 
-# Automatically substitute virtual package libjpeg with a real package
-pkgs=${pkgs//libjpeg/libjpeg-turbo}
 
-pkgs+=" xdg-utils"
-[ "$pkgs" ] && {
-	for i in $ignore; do
-		echo "Ignoring $i..."
-		pkgs=${pkgs//$i/}
+if [ "$pkgs" ]; then
+	pkgs+=("xdg-utils")
+
+	# Automatically substitute virtual package libjpeg with a real package
+	pkgs=(${pkgs[@]/libjpeg/libjpeg-turbo})
+
+	for ign in ${ignore[@]}; do
+		echo "Ignoring $ign ..."
+		pkgs=(${pkgs[@]/#$ign/})
 	done
 
-	for i in $pkgs; do
-		pkgs=${pkgs//$i/${i%%[<>=]*}}
+	# Remove version numbers
+	for pkg in ${pkgs[@]}; do
+		pkgs=(${pkgs[@]/#$pkg/${pkg%%[<>=]*}})
 	done
 
 	echo "These packages will be included:"
 
-	for i in $pkgs; do
+	for i in ${pkgs[@]}; do
 		echo "  $i"
 	done
-}
+fi
 
 
 if [ "$DOWNLOAD" ]; then
 	# Make sure all packages are downloaded
-	for pkg in $pkgs; do
+	for pkg in ${pkgs[@]}; do
 		download_package "$pkg" || exit
 	done
 else
@@ -142,7 +151,7 @@ else
 fi
 
 # Find the file corresponding with each package
-for i in $pkgs; do
+for i in ${pkgs[@]}; do
 	pkg=${i#*/}
 	file=$(find_file_for_package $pkg)
 

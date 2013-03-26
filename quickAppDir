@@ -7,5 +7,5 @@ cp -v "$pg4l_dir"/AppRun.png . || exit 1
 cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
 
 if [ $1 ]; then
-	sed -e "s/_BINARY_/$1/g" AppRun -i
+	sed -e "s|_BINARY_|$1|g" AppRun -i
 fi

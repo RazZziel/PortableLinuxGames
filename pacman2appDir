@@ -40,9 +40,9 @@ case $(cat /etc/issue | head -n 1) in
 		find_dependencies_file() { dpkg info $1; }
 		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
-		uncompress_package_file() { dpkg -d $1; }
-		download_package() { apt-get download "$1"; }
+		find_file_for_package() { ls -1t /var/cache/apt/archives/$1-+([^-])-+([0-9])-+([^.]).deb 2>/dev/null| head -n1; }
+		uncompress_package_file() { dpkg-deb -x $1; }
+		download_package() { sudo apt-get -y --force-yes --download-only install "$1"; }
 		;;
 	*)
 		echo "Distro not supported"
@@ -66,7 +66,7 @@ Suffix=-archlinux
 
 declare -a pkgs=()
 declare -a files=()
-declare -a ignore=("hicolor-icon-theme")
+declare -a ignore=("hicolor-icon-theme" "libgl")
 
 
 # Recolect list of packages
@@ -86,7 +86,7 @@ for i in $@; do
 		*)
 			if [ -f "$i" ]; then
 				# Argument is a file
-				files+=("$i")
+				files+=("$(readlink -f "$i")")
 				for dep in $(find_dependencies_file $i); do
 					pkgs+=("$dep")
 				done
@@ -186,7 +186,7 @@ done
 if [ "$UNPACK" ]; then
 	for i in $files; do
 		echo "Uncompressing $i..."
-		uncompress_package_file $i
+		uncompress_package_file $i || exit 1
 	done
 else
 	echo "Skipping unpack"

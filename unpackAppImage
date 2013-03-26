@@ -3,7 +3,7 @@
 function usage() { echo "$0 <image> <target>"; }
 
 image="$1"
-target="${2:-$(basename "$image" .run)}"
+target="${2:-$(basename "$image" .run).AppDir}"
 mountpoint="$(mktemp -d --suffix=_unpackAppImage)"
 
 [ -z "$image" ] && { usage; exit 1; }

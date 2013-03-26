@@ -10,8 +10,6 @@ Long story short:
 Short story long:
 
 
-	$ mkdir flightgear
-	$ cd flightgear
 	$ pacman2appDir flightgear
 
 
@@ -105,6 +103,7 @@ that, so we ignore it:
 Done, now let's package it
 
 
+	$ cd flightgear.AppDir
 	$ buildAppImage
 
 

@@ -63,6 +63,7 @@ configFile="patch.dat"
 
 # Find package name
 packageName=$(extract_property "Component" "$configFile")
+[ -n "$packageName" ] || packageName=$(extract_property "Description" "$configFile")
 packageVersion=$(extract_property "Version" "$configFile")
 
 [ -n "$packageName" ] || die "Could not find package name"

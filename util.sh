@@ -9,5 +9,5 @@ run_keepResolution() {
 	resolution=$(get_resolution)
 	trap atexit set_resolution "$resolution"
 	$@
-	set_resolution "$resolution"	
+	set_resolution "$resolution"
 }

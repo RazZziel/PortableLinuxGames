@@ -259,6 +259,14 @@ fi
 		chmod +x AppRun
 	}
 
+	# Force applications to use usr instead of opt
+	if [ -d opt ]; then
+		mkdir -p usr/
+		mv -v opt/* usr/
+		rmdir opt
+	fi
+
+
 	rm -vf usr/bin/{ar,as,nm,gprof,elfedit,ld,ld.*,objcopy,objdump,makehrtf,c++filt,addr2line,curl,*-config,*-info,png2pnm,pnm2png,ranlib,readelf,size,strings,strip,wxrc*,xml2-config,xmlcatalog,xmllint,glewinfo,visualinfo,cjpeg,desktop-file-*,djpeg,jpegtran,lua,luac,rdjpgcom,update-desktop-database,wrjpgcom}
 
 	# Actually, patch'em all, for good measure.

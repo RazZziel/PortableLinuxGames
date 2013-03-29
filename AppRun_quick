@@ -31,7 +31,7 @@ ret=0
 	echo "<pre>" >> "${LOGFILE}.html"
 	cat "${LOGFILE}" >> "${LOGFILE}.html"
 	echo "</pre>" >> "${LOGFILE}.html"
-	
+
 	echo "<h2>ldd output</h2>" >> "${LOGFILE}.html"
 	echo "<pre>" >> "${LOGFILE}.html"
 	ldd "$BINARY" >> "${LOGFILE}.html"

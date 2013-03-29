@@ -11,8 +11,8 @@ mountpoint="$(mktemp -d --suffix=_unpackAppImage)"
 
 echo "Unpacking \"${image}\" on \"${target}\"..."
 
-mkdir -p "$target"
+mkdir -p "$target" || exit 1
 
-fuseiso -p "$image" "$mountpoint"
-cp -av "$mountpoint"/* "$target"/
-fusermount -u "$mountpoint"
+fuseiso -p "$image" "$mountpoint" || exit 1
+cp -av "$mountpoint"/* "$target"/ || exit 1
+fusermount -u "$mountpoint" || exit 1

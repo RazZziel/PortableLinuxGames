@@ -1,4 +1,6 @@
 #!/bin/bash
 
-sed -i -e "s|/usr/|././/|g" $@
-sed -i -e "s|/opt/|././/|g" $@
+for i in usr opt; do
+	sed -i -e "s|/${i}/|././/|g" $@
+	sed -i -e "s|/${i}$|././|g" $@
+done

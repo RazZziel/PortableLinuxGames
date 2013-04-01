@@ -1,5 +1,22 @@
 #!/bin/sh
 
+function die() { echo $@; exit 1; }
+function trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
+function trim() { echo $@ | trimp; }
+
+desktopFile_modifyParameter() { file=$1; parameter=$2; value=$3; sed -i -e "s|${parameter}=.*|${parameter}=$value|" "$file"; }
+
+function xml_extract_node() {
+        local node="$1"
+        local file="$2"
+        grep -Pzo "(?s)<$node.*?>.*?</$node>" "$file"
+}
+function xml_extract_property() {
+        local property="$1"
+        local line="$2"
+        echo "$line" | egrep -o "$property=\"[^\"]*\"" | cut -d\" -f2
+}
+
 get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
 set_resolution() { xrandr -s $1; }
 

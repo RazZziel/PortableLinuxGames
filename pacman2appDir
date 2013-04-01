@@ -262,13 +262,13 @@ fi
 			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
 			cp $pg4l_dir/AppRun.desktop .
 
-			desktopFile_modifyParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
-			desktopFile_modifyParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
-			desktopFile_modifyParameter "AppRun.desktop" "X-AppImage-Package" "$MainPackage"
-			desktopFile_modifyParameter "AppRun.desktop" "X-AppImage-Title" "$PackageName"
-			desktopFile_modifyParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
-			desktopFile_modifyParameter "AppRun.desktop" "X-AppImage-Release" "1"
-			desktopFile_modifyParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
+			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
+			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Package" "$MainPackage"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$PackageName"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
 		}
 
 	done

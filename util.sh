@@ -4,7 +4,8 @@ function die() { echo $@; exit 1; }
 function trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
 function trim() { echo $@ | trimp; }
 
-desktopFile_modifyParameter() { file=$1; parameter=$2; value=$3; sed -i -e "s|${parameter}=.*|${parameter}=$value|" "$file"; }
+desktopFile_getParameter() { file=$1; parameter=$2; grep "${parameter}=" "$file" | cut -d= -f2- | trimp; }
+desktopFile_setParameter() { file=$1; parameter=$2; value=$3; sed -i -e "s|${parameter}=.*|${parameter}=$value|" "$file"; }
 
 function xml_extract_node() {
         local node="$1"

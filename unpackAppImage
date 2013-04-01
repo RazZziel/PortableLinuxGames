@@ -1,10 +1,12 @@
 #!/bin/bash
 
-function usage() { echo "$0 <image> <target>"; }
+usage() { echo "$0 <image> <target>"; }
 
 image="$1"
 target="${2:-$(basename "$image" .run).AppDir}"
 mountpoint="$(mktemp -d --suffix=_unpackAppImage)"
+
+cleanup() { fusermount -u "$mountpoint"; }
 
 [ -z "$image" ] && { usage; exit 1; }
 [ -z "$target" ] && { usage; exit 1; }
@@ -14,5 +16,7 @@ echo "Unpacking \"${image}\" on \"${target}\"..."
 mkdir -p "$target" || exit 1
 
 fuseiso -p "$image" "$mountpoint" || exit 1
+trap cleanup EXIT
+
 cp -av "$mountpoint"/* "$target"/ || exit 1
-fusermount -u "$mountpoint" || exit 1
+cleanup

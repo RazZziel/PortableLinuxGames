@@ -6,7 +6,7 @@ if [ -z "$*" ]; then
 	echo "Usage: $0 [binary]"
 fi
 
-cp -v "$pg4l_dir"/AppRun_wine AppRun || exit 1
+cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
 for i in AppRun.desktop AppRun.png; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done

@@ -4,6 +4,21 @@ pg4l_dir=$(dirname $(readlink -f $0))
 
 shopt -s extglob # Enable extended globs
 
+if [ -z "$*" ]; then
+	echo "Usage: $0 <package list> [options]"
+	echo "  Package list:"
+	echo "    <package>: add 'package'"
+	echo "    -<package>: ignore 'package'"
+	echo "  Options:"
+	echo "    --skip-download: Skip package download"
+	echo "    --skip-unpack: Skip package unpacking"
+	echo "    --skip-bringup: Skip AppDir bringup"
+	echo "    --skip-cleanup: Skip AppDir cleanup"
+	echo "    --skip-auto-copy-libs: Skip copying dynamic libraries"
+	echo "    --here: AppDir is the current directory"
+	exit
+fi
+
 case $(cat /etc/issue | head -n 1) in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }

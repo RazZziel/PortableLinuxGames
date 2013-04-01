@@ -1,0 +1,43 @@
+#!/bin/bash
+
+pg4l_dir=$(dirname $(readlink -f $0))
+
+if [ -z "$*" ]; then
+	echo "Usage: $0 <short name> <Application.exe>"
+	exit
+fi
+
+cp -v "$pg4l_dir"/AppRun_wine AppRun || exit 1
+for i in AppRun.desktop AppRun.png; do
+	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
+done
+
+if [ $1 ]; then
+	sed -e "s|_WINEPREFIX_|$1|g" AppRun -i
+fi
+
+if [ $2 ]; then
+	sed -e "s|_BINARY_|$2|g" AppRun -i
+
+	# Trim wine installation
+	#shopt -s extglob
+	#rm -rvf usr/share/!(wine)
+	#rm -vf usr/bin/!(msiexec|regedit|regsvr32|wine|wineboot|winecfg|wineserver)
+
+	export WINEARCH="win32"
+	export WINEDEBUG="-all" 
+	export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"
+	export WINEPREFIX="$(mktemp -d --suffix=_wine2AppDir)"
+	LD_LIBRARY_PREFIX=usr/lib/
+	usr/bin/wineserver -k
+
+	echo "Starting test run..."
+	# Find all used files in a test run
+	
+	USED_FILES="$PWD/used_files.txt"
+	strace -e open,openat usr/bin/wine "$2" 2>&1 |\
+		grep -Po '[^"]*(lib/wine|usr/share/wine|usr/share/fonts)[^"]*' |\
+		sort | uniq | tee "$USED_FILES"
+	
+	#echo "Used files: $(cat "$USED_FILES")"
+fi

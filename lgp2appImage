@@ -2,6 +2,11 @@
 
 pg4l_dir=$(dirname $(readlink -f $0))
 
+if [ -z "$*" ]; then
+	echo "Usage: $0 <package>"
+	exit
+fi
+
 OIFS=$IFS
 NIFS=$'\n'
 

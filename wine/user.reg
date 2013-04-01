@@ -1,0 +1,47 @@
+WINE REGISTRY Version 2
+;; All keys relative to \\User\\S-1-5-4
+
+#arch=win32
+
+[Software\\Wine\\Drivers] 1284387791
+"Audio"="alsa"
+
+[Software\\Blizzard Entertainment\\Starcraft] 1286671912
+"Brood War"="y"
+"InstallPath"="C:\\StarCraft"
+"Program"="C:\\STARCRAFT\\Starcraft.exe"
+"Recent Maps"=hex:00,00
+"Retail"="y"
+"StarCD"="C:\\STARCRAFT"
+"StarEdit"="C:\\StarCraft\\StarCraft"
+"intro"=dword:00000000
+"introX"=dword:00000000
+"Game Speed"="Fastest"
+;;"Gamma"=dword:0000008c
+;;"ColorCycle"=dword:00000001
+;;"UnitPortraits"=dword:00000002
+;;"speed"=dword:00000006
+;;"mscroll"=dword:00000001
+;;"kscroll"=dword:00000001
+;;"m_mscroll"=dword:00000003
+;;"m_kscroll"=dword:00000003
+;;"music"=dword:0000002d
+;;"sfx"=dword:0000001e
+;;"tipnum"=dword:00000001
+;;"unitspeech"=dword:00000001
+;;"unitnoise"=dword:00000002
+;;"bldgnoise"=dword:00000004
+;;"tip"=dword:00000100
+;;"trigtext"=dword:00000400
+
+[Software\\Battle.net\\Configuration] 1286672060
+"Battle.net gateways"=str(7):"1001\00001\0sc.theabyss.ru\0+7\0\6The Abyss (ICCup)\0uswest.battle.net\08\0U.S. West\0useast.battle.net\0006\0U.S. East\0asia.battle.net\0-9\0Asia\0europe.battle.net\0-1\0Europe\0games.podolsk.ru\0+8\0Games Podolsk\0"
+
+[Software\\Wine\\Direct3D]
+"DirectDrawRenderer"="dri"
+"RenderTargetLockMode"="readtex"
+"PixelShaderMode"="enabled"
+"VertexShaderMode"="hardware"
+;; DirectDrawRenderer = dri, opengl, gdi, glsl
+
+

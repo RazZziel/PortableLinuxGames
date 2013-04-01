@@ -2,9 +2,14 @@
 
 pg4l_dir=$(dirname $(readlink -f $0))
 
-cp -v "$pg4l_dir"/AppRun.desktop . || exit 1
-cp -v "$pg4l_dir"/AppRun.png . || exit 1
-cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+if [ -z "$*" ]; then
+	echo "Usage: $0 [binary]"
+fi
+
+cp -v "$pg4l_dir"/AppRun_wine AppRun || exit 1
+for i in AppRun.desktop AppRun.png; do
+	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
+done
 
 if [ $1 ]; then
 	sed -e "s|_BINARY_|$1|g" AppRun -i

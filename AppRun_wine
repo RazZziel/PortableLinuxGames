@@ -1,0 +1,72 @@
+#!/bin/bash
+
+APPDIR=$(dirname "$(readlink -f "$0")")
+LOGFILE="/tmp/package.log"
+BINARY=_BINARY_
+WINETRICKS=
+
+cd "${APPDIR}"
+export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
+export PATH=$PWD/usr/bin/:${PATH}
+
+get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
+set_resolution() { xrandr -s $1; }
+
+show_usage() {
+        USAGE_FILE=usage.txt
+        [ -f $USAGE_FILE ] && {
+                echo "Usage:"
+                cat $USAGE_FILE
+        }
+}
+
+[ -z "$*" ] && show_usage
+
+
+$APPDIR/usr/bin/wineserver -k
+resolution=$(get_resolution)
+
+export WINEPREFIX=~/._WINEPREFIX_
+export WINEARCH="win32"
+export WINEDEBUG="-all" 
+export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"
+
+if [ ! -d "$WINEPREFIX" ]; then
+        mkdir -p ~/.cache/winetricks/
+        if [ "$WINETRICKS" ]; then
+                for i in $APPDIR/winetricks/*; do
+                        ln -sf "$i" ~/.cache/winetricks/
+                done
+                $APPDIR/usr/bin/winetricks -q $WINETRICKS
+        fi
+
+        mkdir -p "$WINEPREFIX"
+	find "$WINEPREFIX" -type d -exec chmod 775 "{}" \;
+	find "$WINEPREFIX" -type f -exec chmod 664 "{}" \;
+#        chown -R "${USER}" "${WINEPREFIX}"
+#        mkdir -p "${WINEPREFIX}/dosdevices"
+#        mkdir -p "${WINEPREFIX}/drive_c"
+#        mkdir -p "${WINEPREFIX}/drive_c/StarCraft"
+#        ln -nfs "${WINEPREFIX}/drive_c" "${WINEPREFIX}/dosdevices/c:"
+#        ln -nfs "${HOME}" "${WINEPREFIX}/dosdevices/y:"
+#        ln -nfs "/" "${WINEPREFIX}/dosdevices/z:"
+#        cp "${APPDIR}/"*.reg "${WINEPREFIX}"
+fi
+
+
+CONF=
+for i in $@; do
+	case $i in
+		conf) CONF=1; shift ;;
+	esac
+done
+
+
+cd "$WINEPREFIX"
+if [ $CONF ]; then
+	$APPDIR/usr/bin/winecfg $@
+else
+	$APPDIR/usr/bin/wine "$APPDIR/$BINARY" $@
+fi
+
+[ "$(get_resolution)" != "$resolution" ] && set_resolution "$resolution"

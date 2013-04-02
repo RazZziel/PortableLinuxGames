@@ -1,18 +1,18 @@
 #!/bin/sh
 
-function die() { echo $@; exit 1; }
-function trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
-function trim() { echo $@ | trimp; }
+die() { echo $@; exit 1; }
+trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
+trim() { echo $@ | trimp; }
 
 desktopFile_getParameter() { file=$1; parameter=$2; grep "${parameter}=" "$file" | cut -d= -f2- | trimp; }
 desktopFile_setParameter() { file=$1; parameter=$2; value=$3; sed -i -e "s|${parameter}=.*|${parameter}=$value|" "$file"; }
 
-function xml_extract_node() {
+xml_extract_node() {
         local node="$1"
         local file="$2"
         grep -Pzo "(?s)<$node.*?>.*?</$node>" "$file"
 }
-function xml_extract_property() {
+xml_extract_property() {
         local property="$1"
         local line="$2"
         echo "$line" | egrep -o "$property=\"[^\"]*\"" | cut -d\" -f2
@@ -23,11 +23,15 @@ set_resolution() { xrandr -s $1; }
 
 run_oss() { if [ $(which padspp 2>/dev/null) ]; then padsp $@; else $@; fi; }
 run_shell() { if [[ $(tty) = "not a tty" ]]; then xterm -e "$@"; else $@; fi; }
-run_keepResolution()
+setup_keepResolution()
 {
 	resolution=$(get_resolution)
 	restore_resolution() { set_resolution "$resolution"; }
 	trap restore_resolution EXIT
+}
+run_keepResolution()
+{
+	setup_keepResolution
 
 	$@
 

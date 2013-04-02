@@ -12,7 +12,7 @@ OIFS=$IFS
 NIFS=$'\n'
 export _POSIX2_VERSION=199209 # Needed to unpack old loki packages
 
-function extract_property() {
+extract_property() {
 	local property="$1"
 	local file="$2"
 	grep "$property:" "$file" | cut -d: -f2 | trimp

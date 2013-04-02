@@ -36,7 +36,8 @@ case $(cat /etc/issue | head -n 1) in
 				[ $(find_file_for_package "$pkg") ] && { echo "Package $pkg already downloaded"; return; }
 
 				echo "Building $pkg ..."
-				pushd /tmp || exit 1
+				mkdir -p /tmp/pacman2AppDir_build/
+				pushd /tmp/pacman2AppDir_build/ || exit 1
 					yaourt -G "$pkg" || exit 1
 					pushd "$pkg" || exit 1
 						makepkg -d || exit 1

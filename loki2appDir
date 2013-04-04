@@ -85,7 +85,11 @@ rm -vf *.sparc64 *.ppc *.alpha
 
 $pg4l_dir/quickAppDir "$packageExecutable"
 Suffix=-loki
-sed -e"s/Name=.*/Name=$packageName $packageVersion-r1$Suffix/" AppRun.desktop -i
+desktopFile_setParameter "AppRun.desktop" "Name" "$packageName $packageVersion-r1$Suffix"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$packageName"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$packageVersion"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
 
 #echo "Creating AppRun with Exec='$binFilename'..."
 #$pg4l_dir/buildAppImage || die "Could not build AppImage"

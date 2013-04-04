@@ -25,6 +25,7 @@ case $(cat /etc/issue | head -n 1) in
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | egrep -v None | cut -d: -f2); echo ${v%-*}; }
+		file_name_file() { pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2- | trimp; }
 		file_url_file() { pacman -Qip $1 | egrep "URL" | egrep -v None | cut -d: -f2- | trimp; }
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-+([^-])-+([0-9\.])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
@@ -79,6 +80,7 @@ AUTOCOPYLIBS=1
 
 
 MainPackage=
+MainPackageFile=
 MainPackageExec=
 MainPackageVersion=
 MainPackageURL=
@@ -190,10 +192,11 @@ done
 
 for i in $files; do
 	if [ ! "$MainPackageVersion" ]; then
-		MainPackage=$(basename $i)
+		MainPackage=$(file_name_file $i)
+		MainPackageFile=$(basename $i)
 		MainPackageVersion=$(find_version_file $i)
 		MainPackageURL=$(file_url_file $i)
-		echo "Assuming main package is $MainPackage with version $MainPackageVersion"
+		echo "Assuming main package is $MainPackageFile with version $MainPackageVersion"
 
 		if [ "$CREATE_APPDIR" ]; then
 			package_name=$(find_package_file $i)
@@ -264,12 +267,12 @@ fi
 			cp $pg4l_dir/AppRun.desktop .
 
 			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
-			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Package" "$MainPackage"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$PackageName"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$MainPackage"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFile"
 		}
 
 	done

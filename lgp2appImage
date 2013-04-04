@@ -180,7 +180,9 @@ optipng "$appDirPath"/AppRun.png >/dev/null
 cd "$appDirPath"
 cp $pg4l_dir/AppRun.desktop .
 Suffix=-lgp
-sed -e"s/Name=.*/Name=$packageName r1$Suffix/" AppRun.desktop -i
+desktopFile_setParameter "AppRun.desktop" "Name" "$packageName r1$Suffix"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
 
 echo "Creating AppRun with Exec='$binFilename'..."
 

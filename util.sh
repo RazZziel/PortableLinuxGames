@@ -62,6 +62,26 @@ overlay_setup()
 	overlay_cleanup
 }
 
+link_overlay_setup()
+{
+	# Example: ln_overlay_setup "${APPDIR}/drive_c/StarCraft" "${WINEPREFIX}/drive_c/StarCraft"
+
+	local from="$1"
+	local to="$2"
+	for i in "$from"/*; do
+		if [ -d "$i" ]; then
+			mkdir "$to/`basename $i`" 2>/dev/null
+			link_overlay_setup "$i" "$to/`basename $i`"
+		elif [ -f "$i" ]; then
+			case "$i" in
+				*.ini) cp -n "$i" "$to/" ;;
+				*) ln -nfs "$i" "$to/" ;;
+			esac
+		fi
+	done
+}
+
+
 build_report()
 {
 	logfile="$1"; shift

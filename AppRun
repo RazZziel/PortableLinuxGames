@@ -1,56 +1,26 @@
-#!/bin/bash
+#!/bin/sh
 
 APPDIR=$(dirname "$(readlink -f "$0")")
-LOGFILE="/tmp/package.log"
+LOGFILE=$(mktemp --suffix=_AppRun )
+
 BINARY=bin/_BINARY_
+BINARY_ARGS=
 
 cd "${APPDIR}"
+. util.sh
+
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
 export PATH=$PWD/usr/bin/:${PATH}
 
-get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
-set_resolution() { xrandr -s $1; }
+[ -z "$*" ] && show_usage "usage.txt"
 
-show_usage() {
-        USAGE_FILE=usage.txt
-        [ -f $USAGE_FILE ] && {
-                echo "Usage:"
-                cat $USAGE_FILE
-        }
-}
-
-[ -z "$*" ] && show_usage
-
-resolution=$(get_resolution)
+setup_keepResolution
 
 ret=0
 cd usr/
-{ "$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $@; ret=$?; } 2>&1 | tee "$LOGFILE"
-
-[ "$(get_resolution)" != "$resolution" ] && set_resolution "$resolution"
+{ "$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $BINARY_ARGS $@; ret=$?; } 2>&1 | tee "$LOGFILE"
 
 [ $ret != 0 -a $ret != -1 ] && {
-	echo "<html><body>" > "${LOGFILE}.html"
-	echo "<p>Looks like the package has crashed, sorry about that!</p>" >> "${LOGFILE}.html"
-	echo "<p>Please help us fix this error sending this log file to <a href='mailto:tux@portablelinuxgames.org'>tux@portablelinuxgames.org</a>, if possible commenting how the game crashed.</p>" >> "${LOGFILE}.html"
-	echo "The binary returned $ret" >> "${LOGFILE}.html"
-
-	echo "<h2>Game output</h2>" >> "${LOGFILE}.html"
-	echo "<pre>" >> "${LOGFILE}.html"
-	cat "${LOGFILE}" >> "${LOGFILE}.html"
-	echo "</pre>" >> "${LOGFILE}.html"
-
-	echo "<h2>ldd output</h2>" >> "${LOGFILE}.html"
-	echo "<pre>" >> "${LOGFILE}.html"
-	ldd "$BINARY" >> "${LOGFILE}.html"
-	echo "</pre>" >> "${LOGFILE}.html"
-
-	echo "<h2>System information</h2>" >> "${LOGFILE}.html"
-	echo "<pre>" >> "${LOGFILE}.html"
-	cat /etc/*-release >> "${LOGFILE}.html"
-	uname -a >> "${LOGFILE}.html"
-	echo "</pre>" >> "${LOGFILE}.html"
-
-	echo "</body></html>" >> "${LOGFILE}.html"
+	build_report "$LOGFILE" "$BINARY" > "${LOGFILE}.html"
 	xdg-open "${LOGFILE}.html" &
 }

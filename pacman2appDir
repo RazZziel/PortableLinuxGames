@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pg4l_dir=$(dirname $(readlink -f $0))
-source "$pg4l_dir/util.sh"
+. "$pg4l_dir/util.sh"
 
 shopt -s extglob # Enable extended globs
 
@@ -255,7 +255,7 @@ fi
 
 		[ -f "./$PackageExec" ] && {
 			echo "Patching absolute paths in ./$PackageExec"
-			$pg4l_dir/patchAbsolutePaths "./$PackageExec"
+			"$pg4l_dir/patchAbsolutePaths" "./$PackageExec"
 		}
 
 		[ -f AppRun.desktop ] || {
@@ -264,7 +264,7 @@ fi
 				MainPackageVersion=_VERSION_
 			}
 			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
-			cp $pg4l_dir/AppRun.desktop .
+			cp "$pg4l_dir/AppRun.desktop" .
 
 			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$PackageName"
@@ -284,11 +284,12 @@ fi
 		}
 
 		echo "Creating AppRun with Exec='${MainPackageExec}'..."
-		cp $pg4l_dir/AppRun .
+		cp "$pg4l_dir/AppRun" .
 		
 		sed -e"s/_BINARY_/$MainPackageExec/g" AppRun -i
 		chmod +x AppRun
 	}
+	cp "$pg4l_dir/util.sh" . || exit 1
 
 	# Force applications to use usr instead of opt
 	if [ -d opt ]; then
@@ -301,12 +302,12 @@ fi
 	rm -vf usr/bin/{ar,as,nm,gprof,elfedit,ld,ld.*,objcopy,objdump,makehrtf,c++filt,addr2line,curl,*-config,*-info,png2pnm,pnm2png,ranlib,readelf,size,strings,strip,wxrc*,xml2-config,xmlcatalog,xmllint,glewinfo,visualinfo,cjpeg,desktop-file-*,djpeg,jpegtran,lua,luac,rdjpgcom,update-desktop-database,wrjpgcom}
 
 	# Actually, patch'em all, for good measure.
-	$pg4l_dir/patchAbsolutePaths usr/bin/*
+	"$pg4l_dir/patchAbsolutePaths" usr/bin/*
 
 	if [ $AUTOCOPYLIBS ]; then
 		echo "Copying missling libraries..."
 		chmod +x usr/lib/*.so*
-		$pg4l_dir/copyMissingLibraries
+		"$pg4l_dir/copyMissingLibraries"
 	fi
 } || {
 	echo "Skipping bringup"

@@ -26,7 +26,14 @@ run_shell() { if [[ $(tty) = "not a tty" ]]; then xterm -e "$@"; else $@; fi; }
 setup_keepResolution()
 {
 	resolution=$(get_resolution)
-	restore_resolution() { set_resolution "$resolution"; }
+
+	restore_resolution() {
+		if [ "$(get_resolution)" != "$resolution" ]; then
+			echo "Restoring display resolution to $resolution ..."
+			set_resolution "$resolution"
+		fi
+	}
+
 	trap restore_resolution EXIT
 }
 run_keepResolution()
@@ -38,54 +45,62 @@ run_keepResolution()
 	restore_resolution
 }
 
-overlay_setup()
+unionfs_overlay_setup()
 {
-	local ro_data_path="$1"; shift
-	local app="$1"; shift
+	local ro_data_path="$(readlink -f "$1")"
+	local config_dir="$(readlink -fm $2)"
 
-	local config_dir="$HOME/.$app"
-	local rw_data_path="$config_dir/data"
-	overlay_path="$config_dir/overlay"
+	local rw_data_path="${config_dir}_rw_data"
+	overlay_path="$config_dir"
 
 	mkdir -p "$overlay_path" || return 1
 	mkdir -p "$rw_data_path" || return 1
 
-	overlay_cleanup() { fusermount -u "$overlay_path"; }
+	overlay_cleanup() {
+		echo "Unmounting overlay '$overlay_path'..."
+		fusermount -u -z "$overlay_path"
+	}
+
+	overlay_cleanup 2>/dev/null
 
 	unionfs -o cow "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
+
 	trap overlay_cleanup EXIT
-
-	pushd "$overlay_path"
-	./$app $@
-	popd
-
-	overlay_cleanup
 }
 
 link_overlay_setup()
 {
-	# Example: ln_overlay_setup "${APPDIR}/drive_c/StarCraft" "${WINEPREFIX}/drive_c/StarCraft"
+	# Example: link_overlay_setup "${APPDIR}/drive_c/StarCraft" "${WINEPREFIX}/drive_c/StarCraft"
 
-	local from="$1"
-	local to="$2"
-	for i in "$from"/*; do
-		if [ -d "$i" ]; then
-			mkdir "$to/`basename $i`" 2>/dev/null
-			link_overlay_setup "$i" "$to/`basename $i`"
-		elif [ -f "$i" ]; then
-			case "$i" in
-				*.ini) cp -n "$i" "$to/" ;;
-				*) ln -nfs "$i" "$to/" ;;
-			esac
-		fi
-	done
+	spawn()
+	{
+		local from="$1"
+		local to="$2"
+
+
+		[ ! -d "$to" ] && mkdir -vp "$to"
+		for i in "$from"/*; do
+			if [ -d "$i" ]; then
+				spawn "$i" "$to/$(basename $i)" &
+			elif [ -f "$i" ]; then
+				case "$i" in
+					*.ini | *.cfg | *.dat) cp -vn "$i" "$to/" || exit 1 ;;
+					*) ln -nfs "$i" "$to/" || exit 1 ;;
+				esac
+			fi
+		done
+	}
+
+	spawn "$(readlink -f "$1")" "$(readlink -fm "$2")"
+	
+	wait
 }
 
 
 build_report()
 {
-	logfile="$1"; shift
-	bin="$1"; shift
+	local logfile="$1"
+	local bin="$2"
 
 	echo "<html><body>"
 	echo "<p>Looks like the package has crashed, sorry about that!</p>"
@@ -111,9 +126,16 @@ build_report()
 	if [ -f "$bin" ]; then
 		echo "<h2>ldd output</h2>"
 		echo "<pre>"
-		ldd "$BINARY"
+		ldd "$bin"
 		echo "</pre>"
 	fi
 
 	echo "</body></html>"
 }
+
+show_usage()
+{
+        usage_file="$1"
+        [ -f "$usage_file" ] && "$usage_file"
+}
+

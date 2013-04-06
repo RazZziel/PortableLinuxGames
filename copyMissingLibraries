@@ -16,9 +16,9 @@ findFiles() {
 }
 
 extractDependencies() {
-	objdump -p "$@" 2>/dev/null | egrep NEEDED | awk '{ print $2 }' | grep -v "$PWD" | egrep "^/" | sort | uniq
-	#ldd $@ | grep "not found" | sort | uniq >&2
-	#ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
+	#objdump -p "$@" 2>/dev/null | egrep NEEDED | awk '{ print $2 }' | grep -v "$PWD" | egrep "^/" | sort | uniq
+	ldd $@ | grep "not found" | sort | uniq >&2
+	ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
 }
 
 mkdir -p usr/lib

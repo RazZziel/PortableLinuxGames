@@ -7,7 +7,7 @@ BINARY=bin/_BINARY_
 BINARY_ARGS=
 
 cd "${APPDIR}"
-. util.sh
+. ./util.sh
 
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
 export PATH=$PWD/usr/bin/:${PATH}

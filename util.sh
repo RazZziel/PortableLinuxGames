@@ -64,6 +64,7 @@ unionfs_overlay_setup()
 	overlay_cleanup 2>/dev/null
 
 	unionfs -o cow "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
+	#./unionfs-fuse -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
 
 	trap overlay_cleanup EXIT
 }

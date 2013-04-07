@@ -15,7 +15,7 @@ for i in AppRun.desktop AppRun.png; do
 done
 
 if [ $1 ]; then
-	sed -e "s|_WINEPREFIX_|$1|g" AppRun -i
+	sed -e "s|_WINEPREFIX_|~/.local/share/AppImage/${1}_wine|g" AppRun -i
 fi
 
 if [ $2 ]; then

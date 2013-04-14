@@ -1,4 +1,6 @@
 #!/bin/sh
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 die() { echo $@; exit 1; }
 trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
@@ -63,7 +65,7 @@ unionfs_overlay_setup()
 
 	overlay_cleanup 2>/dev/null
 
-	unionfs -o cow "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
+	unionfs -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
 	#./unionfs-fuse -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
 
 	trap overlay_cleanup EXIT

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 pg4l_dir=$(dirname $(readlink -f $0))
 . "$pg4l_dir/util.sh"
@@ -8,38 +10,35 @@ if [ -z "$*" ]; then
 	exit
 fi
 
+
+package=$1; shift
+bin=$1; shift
+wineUsrPath=$1; shift
+
+TRIM=
+
+for i in $@; do
+	case $i in
+	-trim)
+		TRIM=1
+		;;
+	esac
+done
+
 cp -v "$pg4l_dir/AppRun_wine" AppRun || exit 1
 cp "$pg4l_dir/util.sh" . || exit 1
 for i in AppRun.desktop AppRun.png; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done
 
-if [ $1 ]; then
-	sed -e "s|_WINEPREFIX_|~/.local/share/AppImage/${1}_wine|g" AppRun -i
+if [ "$package" ]; then
+	sed -e "s|_WINEPREFIX_|~/.local/share/AppImage/${package}_wine|g" AppRun -i
 fi
 
-if [ $2 ]; then
-	sed -e "s|_BINARY_|$2|g" AppRun -i
+if [ "$bin" ]; then
+	sed -e "s|_BINARY_|$bin|g" AppRun -i
 
-	# Trim wine installation
-	#shopt -s extglob
-	#rm -rvf usr/share/!(wine)
-	#rm -vf usr/bin/!(msiexec|regedit|regsvr32|wine|wineboot|winecfg|wineserver)
-
-	export WINEARCH="win32"
-	export WINEDEBUG="-all" 
-	export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"
-	export WINEPREFIX="$(mktemp -d --suffix=_wine2AppDir)"
-	LD_LIBRARY_PREFIX=usr/lib/
-	usr/bin/wineserver -k
-
-	echo "Starting test run..."
-	# Find all used files in a test run
-	
-	USED_FILES="$PWD/used_files.txt"
-	strace -e open,openat usr/bin/wine "$2" 2>&1 |\
-		grep -Po '[^"]*(lib/wine|usr/share/wine|usr/share/fonts)[^"]*' |\
-		sort | uniq | tee "$USED_FILES"
-	
-	#echo "Used files: $(cat "$USED_FILES")"
+	if [ "$TRIM" ]; then
+		"$pg4l_dir"/wineTrim "$bin" "$wineUsrPath"
+	fi
 fi

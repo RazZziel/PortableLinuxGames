@@ -1,4 +1,6 @@
 #!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 EXCEPTIONS=libGL.so.1
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:usr/lib/

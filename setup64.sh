@@ -1,4 +1,6 @@
 #!/bin/sh
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 sudo apt-get update
 sudo apt-get install libc6-i386 libglib2.0-0:i386 libgl1-mesa-glx-lts-quantal:i386

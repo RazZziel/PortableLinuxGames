@@ -1,4 +1,6 @@
 #!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 pg4l_dir=$(dirname $(readlink -f $0))
 
@@ -7,6 +9,8 @@ if [ -z "$*" ]; then
 fi
 
 cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+cp -v "$pg4l_dir"/util.sh . || exit 1
+
 for i in AppRun.desktop AppRun.png; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done

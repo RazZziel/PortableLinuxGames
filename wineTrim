@@ -2,7 +2,7 @@
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
-# This script runs creates a minimal wine install for running one application
+# This script creates a minimal wine install for running one application
 # It runs the windows application (<Application.exe>) using a wine installation
 # (<path to wine installation's usr/>), extracts the used files, and copies
 # them to ./usr/

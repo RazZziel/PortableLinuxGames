@@ -1,0 +1,96 @@
+#!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
+
+# This script runs creates a minimal wine install for running one application
+# It runs the windows application (<Application.exe>) using a wine installation (<path to wine installation's usr/>),
+# extracts the used files, and copies them to ./usr/
+# There are two modes of operation: 
+#   "strace" is much more reliable, but the performance overhead is so big some applications may not work properly
+#   "lsof" is not so reliable, but may be good enough, and performance overhead is mostly negligible
+
+pg4l_dir=$(dirname $(readlink -f $0))
+. "$pg4l_dir/util.sh"
+
+bin="$1"
+wineUsrPath="$(readlink -f "$2")"
+targetUsrPath="./usr"
+mode="strace"
+run="$wineUsrPath/bin/wine $bin"
+
+if [ ! "$bin" -o ! "$wineUsrPath" ]; then
+	echo "Usage: $0 [options] <Application.exe> <path to wine installation's usr/>"
+	echo "Options:"
+	echo "  -mode=[strace|lsof]	Use either strace or lsof to extract used files"
+	echo "  -winecfg			Run winecfg instead of wine <Application.exe>"
+	exit
+fi
+
+for i in $@; do
+	case $i in
+	-mode=*)
+		mode=${i#*=}
+		shift
+		;;
+	-winecfg)
+		run="$wineUsrPath/bin/winecfg"
+		;;
+	esac
+done
+
+[ ! -d "$wineUsrPath" ] && die "Could not find $wineUsrPath"
+[ ! -d "$wineUsrPath/lib" ] && die "Could not find $wineUsrPath/lib"
+[ ! -f "$wineUsrPath/bin/wine" ] && die "Could not find $wineUsrPath/bin/wine"
+
+CREATE_NEW_USR=1
+
+# Trim wine installation
+#shopt -s extglob
+#rm -rvf usr/share/!(wine)
+#rm -vf usr/bin/!(msiexec|regedit|regsvr32|wine|wineboot|winecfg|wineserver)
+
+export WINEARCH="win32"
+export WINEDEBUG="-all"
+export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"
+export WINEPREFIX="$(mktemp -d --suffix=_wine2AppDir)"
+export LD_LIBRARY_PATH="$wineUsrPath/lib/"
+"$wineUsrPath"/bin/wineserver -k
+
+echo "Starting test run..."
+# Find all used files in a test run
+
+USED_FILES="$PWD/used_files.txt"
+echo > "$USED_FILES"
+
+for i in bin/{wine,wineboot,winecfg,wineserver,msiexec,regedit,regsvr32} share/wine/wine.inf; do
+	echo "$wineUsrPath/$i" >> "$USED_FILES"
+done
+
+
+if [ "$mode" = "strace" ]; then
+	echo "Running $run in strace mode..."
+	strace -f -e open $run 2>&1 | egrep -o "$wineUsrPath/[^\"]*" >> "$USED_FILES"
+elif [ "$mode" = "lsof" ]; then
+	echo "Running $run in lsof mode..."
+	$run &
+	PID=$!
+	while :; do
+		kill -0 $PID 2>/dev/null || break
+		echo .
+		lsof | egrep -o "$wineUsrPath/.*" >> "$USED_FILES"
+		#sleep 1
+	done
+else
+	die "!! Unknown mode $mode"
+fi
+
+#echo "Used files: $(cat "$USED_FILES")"
+
+echo "Copying used files into $targetUsrPath/ ...";
+if [ $CREATE_NEW_USR ]; then
+	for i in $(cat "$USED_FILES" | sort | uniq); do
+		[ -f "$i" ] && install -Dv "$i" "$targetUsrPath/$(echo "$i" | sed -e "s|$wineUsrPath||")"
+	done
+fi
+
+rm "$USED_FILES"

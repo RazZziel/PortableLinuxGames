@@ -3,11 +3,14 @@
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 # This script runs creates a minimal wine install for running one application
-# It runs the windows application (<Application.exe>) using a wine installation (<path to wine installation's usr/>),
-# extracts the used files, and copies them to ./usr/
+# It runs the windows application (<Application.exe>) using a wine installation
+# (<path to wine installation's usr/>), extracts the used files, and copies
+# them to ./usr/
 # There are two modes of operation: 
-#   "strace" is much more reliable, but the performance overhead is so big some applications may not work properly
-#   "lsof" is not so reliable, but may be good enough, and performance overhead is mostly negligible
+#   "strace" is much more reliable, but the performance overhead is so big
+#     some applications may not work properly
+#   "lsof" is not so reliable, but may be good enough, and performance overhead
+#     is mostly negligible
 
 pg4l_dir=$(dirname $(readlink -f $0))
 . "$pg4l_dir/util.sh"
@@ -21,8 +24,8 @@ run="$wineUsrPath/bin/wine $bin"
 if [ ! "$bin" -o ! "$wineUsrPath" ]; then
 	echo "Usage: $0 [options] <Application.exe> <path to wine installation's usr/>"
 	echo "Options:"
-	echo "  -mode=[strace|lsof]	Use either strace or lsof to extract used files"
-	echo "  -winecfg			Run winecfg instead of wine <Application.exe>"
+	echo "  -mode=[strace|lsof] Use either strace or lsof to extract used files"
+	echo "  -winecfg            Run winecfg instead of wine <Application.exe>"
 	exit
 fi
 

@@ -87,13 +87,15 @@ else
 	die "!! Unknown mode $mode"
 fi
 
-#echo "Used files: $(cat "$USED_FILES")"
 
-echo "Copying used files into $targetUsrPath/ ...";
 if [ $CREATE_NEW_USR ]; then
+	echo "Copying used files into $targetUsrPath/ ...";
 	for i in $(cat "$USED_FILES" | sort | uniq); do
 		[ -f "$i" ] && install -Dv "$i" "$targetUsrPath/$(echo "$i" | sed -e "s|$wineUsrPath||")"
 	done
+else
+	echo "Used files:"
+	cat "$USED_FILES"
 fi
 
 rm "$USED_FILES"

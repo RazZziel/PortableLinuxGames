@@ -81,7 +81,7 @@ elif [ "$mode" = "lsof" ]; then
 		kill -0 $PID 2>/dev/null || break
 		echo .
 		lsof | egrep -o "$wineUsrPath/.*" >> "$USED_FILES"
-		#sleep 1
+		sleep 1
 	done
 else
 	die "!! Unknown mode $mode"

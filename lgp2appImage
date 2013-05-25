@@ -5,11 +5,6 @@
 pg4l_dir=$(dirname $(readlink -f $0))
 . "$pg4l_dir/util.sh"
 
-if [ -z "$*" ]; then
-	echo "Usage: $0 <package>"
-	exit
-fi
-
 OIFS=$IFS
 NIFS=$'\n'
 
@@ -22,6 +17,7 @@ NIFS=$'\n'
 	echo "  --skip-cleanup: Skip cleanup of temporal directories"
 	echo "  --skip-appimage: Skip creation of AppImage"
 	echo "  --lgp-unpacker: Use lgp installer to extract the package data"
+	exit
 }
 
 EXTRACT=1
@@ -196,7 +192,9 @@ echo 'cd $(dirname "$(readlink -f "$0")")' >> AppRun
 echo "./$binFilename" >> AppRun
 chmod +x AppRun
 
-$pg4l_dir/buildAppImage || die "Could not build AppImage"
+if [ $APPIMAGE ]; then
+	$pg4l_dir/buildAppImage || die "Could not build AppImage"
+fi
 
 if [ $CLEANUP ]; then
 	echo "Removing $target"

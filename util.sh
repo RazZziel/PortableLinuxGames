@@ -6,7 +6,7 @@ die() { echo $@; exit 1; }
 trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
 trim() { echo $@ | trimp; }
 
-desktopFile_getParameter() { file=$1; parameter=$2; grep "${parameter}=" "$file" | cut -d= -f2- | trimp; }
+desktopFile_getParameter() { file=$1; parameter=$2; grep "${parameter}=" "$file" | cut -d= -f2- | cut -d\" -f2 | trimp; }
 desktopFile_setParameter() { file=$1; parameter=$2; value=$3; sed -i -e "s|${parameter}=.*|${parameter}=$value|" "$file"; }
 
 xml_extract_node() {

@@ -5,12 +5,12 @@
 APPDIR=$(dirname "$(readlink -f "$0")")
 LOGFILE=$(mktemp --suffix=_AppRun )
 
-BINARY=_BINARY_
+BINARY="_BINARY_"
 BINARY_ARGS=
 WINETRICKS=
 
 cd "${APPDIR}"
-. ./qutil.sh
+. ./util.sh
 
 export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
 export PATH=$PWD/usr/bin/:${PATH}

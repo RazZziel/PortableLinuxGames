@@ -30,7 +30,7 @@ case $(cat /etc/issue | head -n 1) in
 		file_name_file() { pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2- | trimp; }
 		file_url_file() { pacman -Qip $1 | egrep "URL" | egrep -v None | cut -d: -f2- | trimp; }
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.]).pkg.tar.xz 2>/dev/null| head -n1; }
+		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		download_package() {
 			case "$1" in

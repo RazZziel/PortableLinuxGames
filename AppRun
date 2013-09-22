@@ -20,8 +20,8 @@ setup_keepResolution
 ret=0
 cd usr/
 {
-	export LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH"
-	"$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $BINARY_ARGS $@
+	LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" \
+		"$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $BINARY_ARGS $@
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

@@ -1,0 +1,130 @@
+#!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
+
+pg4l_dir=$(dirname $(readlink -f $0))
+. "$pg4l_dir/util.sh"
+
+OIFS=$IFS
+NIFS=$'\n'
+
+[ -z "$*" ] && {
+	echo "Usage: "
+	echo "  $0 <lgp_installer.run> [options]"
+	echo "Options:"
+	echo "  --skip-extract: Skip extract of the makeself package"
+	echo "  --skip-cleanup: Skip cleanup of temporal directories"
+	echo "  --skip-appimage: Skip creation of AppImage"
+	echo "  --no-lgp-unpacker: Don't use nix installer to extract the package data"
+	exit
+}
+
+EXTRACT=1
+CLEANUP=1
+APPIMAGE=1
+USE_NIX_UNPACKER=1
+
+for i in $@; do
+        case $i in
+                --skip-extract) EXTRACT=; shift ;;
+                --skip-cleanup) CLEANUP=; shift ;;
+                --skip-appimage) APPIMAGE=; shift ;;
+                --lgp-unpacker) USE_NIX_UNPACKER=; shift ;;
+		*) pkg=$i; shift ;;
+	esac
+done
+
+[ -n "$pkg" ] || die "No lgp installer specified"
+
+target="$PWD/${pkg}_uncompressed"
+appDirPath="$PWD/${pkg}.AppDir"
+
+if [ "$USE_NIX_UNPACKER" ]; then
+	if [ $EXTRACT ]; then
+		echo "Installing $pkg on $appDirPath ..."
+		sh "$pkg" -u --accept-license -d "$appDirPath" || die "Could not extract package"
+	fi
+
+	cd "$appDirPath" || exit 1
+
+	# Find package name and version
+	uninstallScript="$(find -iname uninstall.sh)"
+	packageName=$(desktopFile_getParameter "$uninstallScript" PROGNAME)
+	packageVersion=$(desktopFile_getParameter "$uninstallScript" PROGVER)
+else
+	if [ $EXTRACT ]; then
+		sh "$pkg" --noexec --target "$target" || die "Could not unpack package"
+	fi
+
+	cd "$target" || exit 1
+
+	configFile="$(find -iname config.lua)"
+	[ -n "$configFile" ] || die "Could not find config file"
+
+	# Find package name and version
+	packageName=$(desktopFile_getParameter ??? "$configFile")
+	packageVersion=$(desktopFile_getParameter ??? "$configFile")
+
+	mkdir -p "$appDirPath"
+
+	for i in instarchive_all instarchive_all_x86; do
+		echo "Unpacking file '$i' ..."
+		tar -xJvf "$i" -C "$appDirPath" || die "Could not extract $i" || die
+	done
+fi
+
+cd "$appDirPath" || exit 1
+
+[ -n "$packageName" ] || die "Could not find package name"
+[ -n "$packageVersion" ] || die "Could not find package version"
+echo "Package: $packageName $packageVersion"
+
+desktopFile="$(find -iname "*.desktop" | grep -v AppRun.desktop | grep -v Manual | head -n1)"
+echo $desktopFile
+[ -n "$desktopFile" ] || die "Could not find desktop file"
+
+binFilename=$(desktopFile_getParameter "$desktopFile" Exec)
+[ -n "$binFilename" ] && binFilename=$(find -name $(basename $binFilename))
+[ -n "$binFilename" ] || die "Could not find binary name"
+
+iconPath=$(desktopFile_getParameter "$desktopFile" Icon)
+[ -n "$iconPath" ] || die "Could not find icon path"
+
+
+convert -resize 32x "$iconPath" "$appDirPath"/AppRun.png || die "Could not copy icon"
+[ -f "AppRun-0.png" ] && {
+	mv -v AppRun-0.png AppRun.png
+	rm -v AppRun-?.png
+}
+optipng "$appDirPath"/AppRun.png >/dev/null
+
+
+cd "$appDirPath"
+cp $pg4l_dir/AppRun.desktop .
+cp $pg4l_dir/util.sh .
+Suffix=-nix
+desktopFile_setParameter "AppRun.desktop" "Name" "$packageName r1$Suffix"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$packageVersion"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
+
+echo "Creating AppRun with Exec='$binFilename'..."
+
+echo '#!/bin/bash' > AppRun
+echo 'cd $(dirname "$(readlink -f "$0")")' >> AppRun
+#for i in $(for i in $(find -iname *.so*); do dirname "$i"; done | sort | uniq); do
+#	echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$i" >> AppRun	
+#done
+echo "./$binFilename" >> AppRun
+chmod +x AppRun
+
+if [ $APPIMAGE ]; then
+	$pg4l_dir/buildAppImage || die "Could not build AppImage"
+fi
+
+if [ $CLEANUP ]; then
+	echo "Removing $target"
+	rm -rf "$target"
+	echo "Removing $appDirPath"
+	rm -rf "$appDirPath"
+fi

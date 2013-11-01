@@ -8,18 +8,21 @@ LOGFILE=$(mktemp --suffix=_AppRun )
 BINARY=_BINARY_
 BINARY_ARGS=
 
-cd "${APPDIR}"
+cd "$APPDIR"
 . ./util.sh
 
-export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
-export PATH=$PWD/usr/bin/:${PATH}
+export PATH="$PWD/usr/bin/:$PATH"
 
 [ -z "$*" ] && show_usage "usage.txt"
 
 setup_keepResolution
 
 ret=0
-{ ./$BINARY $BINARY_ARGS $@; ret=$?; } 2>&1 | tee "$LOGFILE"
+{
+	LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" \
+		./$BINARY $BINARY_ARGS $@
+	ret=$?
+} 2>&1 | tee "$LOGFILE"
 
 [ $ret != 0 -a $ret != -1 ] && {
 	build_report "$LOGFILE" "$BINARY" > "${LOGFILE}.html"

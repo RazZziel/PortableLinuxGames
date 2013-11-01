@@ -17,7 +17,7 @@ cp -av "$binary" "${binary}_Data" "$appDir" || exit 1
 pushd "$appDir"
 
 cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
-for i in AppRun.desktop AppRun.png; do
+for i in AppRun.desktop AppRun.png util.sh; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done
 

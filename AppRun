@@ -5,7 +5,7 @@
 APPDIR=$(dirname "$(readlink -f "$0")")
 LOGFILE=$(mktemp --suffix=_AppRun )
 
-BINARY=bin/_BINARY_
+BINARY=_BINARY_
 BINARY_ARGS=
 
 cd "$APPDIR"

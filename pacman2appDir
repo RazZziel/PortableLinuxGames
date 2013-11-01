@@ -145,7 +145,7 @@ if [ "$pkgs" ]; then
 	pkgs+=("xdg-utils")
 
 	# Automatically substitute virtual package libjpeg with a real package
-	pkgs=(${pkgs[@]/libjpeg/libjpeg-turbo})
+	#pkgs=(${pkgs[@]/libjpeg/libjpeg-turbo})
 
 	for ign in ${ignore[@]}; do
 		echo "Ignoring $ign ..."
@@ -212,7 +212,7 @@ done
 
 if [ "$UNPACK" ]; then
 	for i in $files; do
-		echo "Uncompressing $i..."
+		echo "Uncompressing $i ..."
 		uncompress_package_file $i || exit 1
 	done
 else
@@ -288,7 +288,7 @@ fi
 		echo "Creating AppRun with Exec='${MainPackageExec}'..."
 		cp "$pg4l_dir/AppRun" .
 		
-		sed -e"s/_BINARY_/$MainPackageExec/g" AppRun -i
+		sed -e"s|_BINARY_|bin/$MainPackageExec|g" AppRun -i
 		chmod +x AppRun
 	}
 	cp "$pg4l_dir/util.sh" . || exit 1

@@ -2,17 +2,16 @@
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
-APPDIR=$(dirname "$(readlink -f "$0")")
+export APPDIR="$(dirname "$(readlink -f "$0")")"
 LOGFILE=$(mktemp --suffix=_AppRun )
 
 BINARY="_BINARY_"
 BINARY_ARGS=
 WINETRICKS=
 
-cd "${APPDIR}"
+cd "$APPDIR"
 . ./util.sh
 
-export LD_LIBRARY_PATH=$PWD/usr/lib/:${LD_LIBRARY_PATH}
 export PATH=$PWD/usr/bin/:${PATH}
 
 [ -z "$*" ] && show_usage "usage.txt"
@@ -58,7 +57,7 @@ done
 
 cd "$WINEPREFIX"
 if [ $CONF ]; then
-	$APPDIR/usr/bin/winecfg $@
+	run_withLocalLibs $APPDIR/usr/bin/winecfg $@
 else
-	$APPDIR/usr/bin/wine "$APPDIR/$BINARY" $BINARY_ARGS $@
+	run_withLocalLibs $APPDIR/usr/bin/wine "$APPDIR/$BINARY" $BINARY_ARGS $@
 fi

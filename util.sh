@@ -89,7 +89,7 @@ link_overlay_setup()
 		[ ! -d "$to" ] && mkdir -vp "$to"
 		for i in "$from"/*; do
 			if [ -d "$i" ]; then
-				spawn "$i" "$to/$(basename $i)" &
+				spawn "$i" "$to/$(basename "$i")" &
 			elif [ -f "$i" ]; then
 				case "$i" in
 					*.ini | *.cfg | *.dat) cp -vn "$i" "$to/" || exit 1 ;;

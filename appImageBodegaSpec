@@ -1,0 +1,57 @@
+#!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
+
+pg4l_dir=$(dirname $(readlink -f $0))
+source "$pg4l_dir/util.sh"
+
+OIFS=$IFS
+NIFS=$'\n'
+IFS=$NIFS
+
+for i in $(ls -1t "$@"); do
+	pkg=$(basename "$i")
+	name=${pkg% *}
+	v=${pkg##* }
+	v=${v%.*}
+	release=${v#*r}
+	version=${v/r$release/}
+	version=${version%-}
+	size=$(du "$i" | awk '{printf "%0.2f\n", $1/1000}')
+
+	mountpoint="$(mktemp -d --suffix=_unpackAppImage)"
+	fuseiso -p "$i" "$mountpoint" || exit 1
+	desktopFile="$(ls -1 "$mountpoint"/*.desktop | head -n1)"
+	url=
+	if [ -f "$desktopFile" ]; then
+		title=$(desktopFile_getParameter "$desktopFile" "X-AppImage-Title")
+		url=$(desktopFile_getParameter "$desktopFile" "X-AppImage-URL")
+	fi
+	fusermount -u "$mountpoint"
+
+	cat <<END
+{
+    "name" : "$pkg",
+    "version" : "$version-r$release",
+    "description" : "",
+    "partner" : "1002",
+    "basePrice" : "0",
+    "file" : "$pkg",
+    "size" : "$size",
+    "previews" : [
+        { "type" : "icon", "subtype" : "small", "file" : "AppImage.png", "mimetype" : "image/png" },
+        { "type" : "screenshot", "subtype" : "screen1", "file" : "cover.jpg", "mimetype" : "image/jpeg" }
+    ],
+    "tags" : [
+        {"type" : "license", "title" : "Commercial"},
+        {"type" : "contentrating", "title" : "Everyone"},
+        {"type" : "assetType", "title" : "application"},
+        {"type" : "author", "title" : "__AUTHOR__"},
+        {"type" : "publisher", "title" : "PortableLinuxGames.org"},
+        {"type" : "created", "title" : "$(date +%d-%m-%Y)"},
+        {"type" : "url", "title" : "$url"}
+    ]
+}
+END
+
+done

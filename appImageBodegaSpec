@@ -34,7 +34,7 @@ for i in $(ls -1t "$@"); do
     "name" : "$pkg",
     "version" : "$version-r$release",
     "description" : "",
-    "partner" : "1002",
+    "partner" : "1036",
     "basePrice" : "0",
     "file" : "$pkg",
     "size" : "$size",

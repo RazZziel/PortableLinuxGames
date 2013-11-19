@@ -73,8 +73,8 @@ unionfs_overlay_setup()
 	echo "Mounting overlay '$overlay_path'..."
 	mkdir -p "$overlay_path" || return 1
 	mkdir -p "$rw_data_path" || return 1
-	unionfs -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
-	#./unionfs-fuse -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
+	#unionfs -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
+	unionfs-fuse -o cow,umask=0000 "$rw_data_path"=RW:"$ro_data_path"=RO "$overlay_path" || return 1
 
 	trap overlay_cleanup EXIT
 }

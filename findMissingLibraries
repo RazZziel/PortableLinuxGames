@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*"
+#./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS

@@ -147,6 +147,6 @@ build_report()
 show_usage()
 {
         usage_file="$1"
-        [ -f "$usage_file" ] && "$usage_file"
+        [ -f "$usage_file" ] && cat "$usage_file"
 }
 

@@ -11,7 +11,7 @@ BINARY_ARGS=
 cd "$APPDIR"
 . ./util.sh
 
-export PATH=$PWD/usr/bin/:$PATH
+export PATH="$PWD/usr/bin/:$PATH"
 
 [ -z "$*" ] && show_usage "usage.txt"
 

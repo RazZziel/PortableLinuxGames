@@ -21,7 +21,7 @@ setup_keepResolution
 ret=0
 cd usr/
 {
-	run_withLocalLibs "$APPDIR"/usr/lib/ld-linux.so.2 ./$BINARY $BINARY_ARGS $@
+	run_withLocalLibs "$APPDIR"/usr/lib/ld-linux.so.2 ./"$BINARY" $BINARY_ARGS $@
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

@@ -17,17 +17,32 @@ for i in $(ls -1t "$@"); do
 	release=${v#*r}
 	version=${v/r$release/}
 	version=${version%-}
-	size=$(du "$i" | awk '{printf "%0.2f\n", $1/1000}')
+	#size=$(du "$i" | awk '{printf "%0.2f\n", $1/1000}')
+    size=$(du "$i" | awk '{printf $1}')
 
 	mountpoint="$(mktemp -d --suffix=_unpackAppImage)"
 	fuseiso -p "$i" "$mountpoint" || exit 1
 	desktopFile="$(ls -1 "$mountpoint"/*.desktop | head -n1)"
+
 	url=
 	if [ -f "$desktopFile" ]; then
 		title=$(desktopFile_getParameter "$desktopFile" "X-AppImage-Title")
 		url=$(desktopFile_getParameter "$desktopFile" "X-AppImage-URL")
 	fi
+
+    icon=
+    if [ -f "$mountpoint/.DirIcon" ]; then
+        icon=$(mktemp)
+        cp "$mountpoint/.DirIcon" "$icon"
+    fi
+
 	fusermount -u "$mountpoint"
+
+
+    icons=
+    screenshots=
+
+    [ -n "$icon" ] && icons+="$icon"
 
 	cat <<END
 {
@@ -39,13 +54,35 @@ for i in $(ls -1t "$@"); do
     "file" : "$pkg",
     "size" : "$size",
     "previews" : [
-        { "type" : "icon", "subtype" : "small", "file" : "AppImage.png", "mimetype" : "image/png" },
-        { "type" : "screenshot", "subtype" : "screen1", "file" : "cover.jpg", "mimetype" : "image/jpeg" }
+END
+
+    for j in $icons; do
+        if [ -f "$j" ]; then
+            #size=$(identify -format "%[fx:w]x%[fx:h]" "$j")
+            width=$(identify -format "%[fx:w]" "$j")
+            case "$width" in
+                "512") subtype="huge" ;;
+                "256") subtype="large" ;;
+                "128") subtype="big" ;;
+                "64") subtype="medium" ;;
+                "48") subtype="small" ;;
+                "32") subtype="small" ;;
+                "22") subtype="tiny" ;;
+                *) subtype="unknown" ;;
+            esac
+            echo { \"type\" : \"icon\", \"subtype\" : \"$subtype\", \"file\" : \"$j\", \"mimetype\" : \"$(file -b --mime-type "$j")\" }
+        fi
+    done
+    for j in $screenshots; do
+        [ -f "$j" ] && echo { \"type\" : \"screenshot\", \"subtype\" : \"screen1\", \"file\" : \"$j\", \"mimetype\" : \"$(file -b --mime-type "$j")\" }
+    done
+
+    cat <<END
     ],
     "tags" : [
-        {"type" : "license", "title" : "Commercial"},
+        {"type" : "license", "title" : "Proprietary / All rights reserved"},
         {"type" : "contentrating", "title" : "Everyone"},
-        {"type" : "assetType", "title" : "application"},
+        {"type" : "assetType", "title" : "game"},
         {"type" : "author", "title" : "__AUTHOR__"},
         {"type" : "publisher", "title" : "PortableLinuxGames.org"},
         {"type" : "created", "title" : "$(date +%d-%m-%Y)"},

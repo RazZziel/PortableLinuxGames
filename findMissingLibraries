@@ -1,4 +1,36 @@
-#!/bin/sh
+#!/bin/bash
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
 
-./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*"
-#./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS
+# This script is meant to be run inside an AppDir.
+# It will try to run the AppRun script with strace,
+# and detect which libraries are loaded in runtime.
+
+opt_copy=
+while getopts "c" arg; do
+	case $arg in
+	c)
+		opt_copy=1
+		;;
+      esac
+done
+shift $((OPTIND-1))
+
+
+process() {
+	while read -r line; do
+		file=$(basename "$line")
+		if [ -f "usr/lib/$file" ]; then
+			echo "[ existing ]" $file
+		else
+			echo "[ missing  ]" $file
+
+			if [ "$opt_copy" ]; then
+				cp -v "$line" "usr/lib/"
+			fi
+		fi
+	done
+}
+
+export APPRUN_STRACE=1
+./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*" | process

@@ -29,6 +29,8 @@ case $(cat /etc/issue | head -n 1) in
 		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | egrep -v None | cut -d: -f2); echo ${v%-*}; }
 		file_name_file() { pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2- | trimp; }
 		file_url_file() { pacman -Qip $1 | egrep "URL" | egrep -v None | cut -d: -f2- | trimp; }
+		file_developer_file() { echo ""; }
+		file_licenses_file() { pacman -Qip $1 | egrep "Licenses" | egrep -v None | cut -d: -f2- | trimp; }
 		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
@@ -86,6 +88,8 @@ MainPackageFile=
 MainPackageExec=
 MainPackageVersion=
 MainPackageURL=
+MainPackageDeveloper=
+MainPackageLicenses=
 Suffix=-archlinux
 
 declare -a pkgs=()
@@ -198,6 +202,8 @@ for i in $files; do
 		MainPackageFile=$(basename $i)
 		MainPackageVersion=$(find_version_file $i)
 		MainPackageURL=$(file_url_file $i)
+		MainPackageDeveloper=$(file_developer_file $i)
+		MainPackageLicenses=$(file_licenses_file $i)
 		echo "Assuming main package is $MainPackageFile with version $MainPackageVersion"
 
 		if [ "$CREATE_APPDIR" ]; then
@@ -273,6 +279,8 @@ fi
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Developer" "$MainPackageDeveloper"
+			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Licenses" "$MainPackageLicenses"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$MainPackage"
 			desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFile"
 		}

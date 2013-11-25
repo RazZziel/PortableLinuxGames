@@ -1,0 +1,30 @@
+#!/bin/sh
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
+
+export APPDIR="$(dirname "$(readlink -f "$0")")"
+export APPPKG="$(basename "$APPIMAGE")"
+LOGFILE=$(mktemp "/tmp/AppRun-log-${APPPKG}.XXXXXXXXXX")
+
+BINARY="java"
+BINARY_ARGS="-jar _BINARY_"
+
+cd "$APPDIR"
+. ./util.sh
+
+export PATH="$PWD/jre1.7.0_17/bin:${PATH}"
+
+[ -z "$*" ] && show_usage "usage.txt"
+
+setup_keepResolution
+
+ret=0
+{
+	"$BINARY" $BINARY_ARGS $@
+	ret=$?
+} 2>&1 | tee "$LOGFILE"
+
+[ $ret != 0 -a $ret != -1 ] && {
+	build_report "$LOGFILE" "$BINARY" > "${LOGFILE}.html"
+	xdg-open "${LOGFILE}.html" &
+}

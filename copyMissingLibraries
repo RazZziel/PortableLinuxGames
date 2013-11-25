@@ -8,8 +8,8 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DESTINATION"
 
 
 findFiles() {
-	find -iname *.so
-	find -iname *.so.*
+	find -iname "*.so"
+	find -iname "*.so.*"
 	
 	[ -d "usr/bin/" ] && find "usr/bin/" -type f -perm /a+x
 
@@ -21,21 +21,25 @@ findFiles() {
 
 extractDependencies() {
 	#objdump -p "$@" 2>/dev/null | egrep NEEDED | awk '{ print $2 }' | grep -v "$PWD" | egrep "^/" | sort | uniq
-	ldd $@ | grep "not found" | sort | uniq >&2
+	ldd "$@" | grep "not found" | sort | uniq >&2
 	ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
 }
 
 extractRuntimeDependencies() {
-	strings $@ | egrep \\.so
+	strings "$@" | egrep \\.so
 }
 
 
 
 mkdir -p "$DESTINATION"
 
+OIFS=$IFS
+NIFS=$'\n'
+IFS=$NIFS
+
 prev_libs=
 while true; do
-	files=$(findFiles $@)
+	files=$(findFiles "$@")
 	libs=$(extractDependencies $files)
 	#runlibs=$(extractRuntimeDependencies $@)
 

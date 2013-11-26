@@ -23,14 +23,9 @@ xml_extract_property() {
 get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
 set_resolution() { xrandr -s $1; }
 
-run_withLocalLibs() {
-	if [ "$APPRUN_STRACE" ]; then
-		LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" exec /usr/bin/strace "$@";
-	else
-		LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" exec "$@";
-	fi
-}
+run_withLocalLibs() { LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" exec "$@"; }
 run_shell() { if [[ $(tty) = "not a tty" ]]; then xterm -e "$@"; else $@; fi; }
+run_elf() { exec "$APPRUN_HELPERS" "$RUNELF_HELPERS" "$@"; }
 
 setup_aoss() { [ -d /proc/asound ] && export LD_PRELOAD="libaoss.so"${LD_PRELOAD:+:$LD_PRELOAD}; }
 setup_padsp() { [ $(which pulseaudio 2>/dev/null) ] && export LD_PRELOAD="libpulsedsp.so"${LD_PRELOAD:+:$LD_PRELOAD}; }

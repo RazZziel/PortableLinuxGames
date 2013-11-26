@@ -8,10 +8,13 @@ if [ -z "$*" ]; then
 	echo "Usage: $0 [binary]"
 fi
 
-cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
-cp -v "$pg4l_dir"/util.sh . || exit 1
+if [ -f "$1" -a "${1##*.}" = "jar" ]; then
+	cp -v "$pg4l_dir"/AppRun_java AppRun || exit 1
+else
+	cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+fi
 
-for i in AppRun.desktop AppRun.png; do
+for i in util.sh AppRun.desktop AppRun.png; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done
 

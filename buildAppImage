@@ -8,7 +8,7 @@ AppImageAssistantDir="$(dirname $(readlink -f "$0"))/AppImageAssistant 0.9"
 DesktopFile=$(ls -1 *.desktop | head -n1)
 [ -n "$DesktopFile" ] || { echo "No package found"; exit 1; }
 
-PackageName=$(egrep Name $DesktopFile | head -n1 | cut -d= -f2).run
+PackageName=$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2).run
 
 rm -if "../$PackageName"
 echo "Building package in ../${PackageName}..."

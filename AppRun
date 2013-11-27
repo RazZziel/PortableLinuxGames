@@ -21,7 +21,8 @@ setup_keepResolution
 ret=0
 cd usr/
 {
-	run_withLocalLibs "$APPDIR"/usr/lib/ld-linux.so.2 ./"$BINARY" $BINARY_ARGS $@
+	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
+	run_withLocalLibs $APPRUN_HELPERS $RUNELF_HELPERS ./"$BINARY" $BINARY_ARGS $@
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

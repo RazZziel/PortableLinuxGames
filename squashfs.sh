@@ -8,7 +8,10 @@ set -e
 HERE=$(dirname $(readlink -f "${0}"))
 export PATH=$HERE:$PATH
 
-WORKDIR="/tmp/"
+OSIMAGE="$1"
+APPIMAGE="$2"
+
+WORKDIR="/tmp/squashfs"
 MOUNTPOINT_UNION="$WORKDIR/union"
 MOUNTPOINT_UNIONFS="$WORKDIR/unionfs"
 MOUNTPOINT_ISO="$WORKDIR/iso"
@@ -18,19 +21,25 @@ trap atexit EXIT
 atexit() {
 	set +e
 	echo "Cleaning up..."
-	fusermount -u "$MOUNTPOINT_UNION/var/lib/dbus" 2>/dev/null
-	fusermount -u "$MOUNTPOINT_UNION/etc/resolv.conf" 2>/dev/null
-	fusermount -u "$MOUNTPOINT_UNION/proc" 2>/dev/null
-	fusermount -u "$MOUNTPOINT_UNION/boot" 2>/dev/null
+	sleep 1
+	killall unionfs
+	sudo umount -l "$APPIMAGE"
+	sudo umount -l "$MOUNTPOINT_UNION/var/lib/dbus"
+	sudo umount -l "$MOUNTPOINT_UNION/etc/resolv.conf"
+	sudo umount -l "$MOUNTPOINT_UNION/dev/pts"
+	sudo umount -l "$MOUNTPOINT_UNION/sys/"
+	sudo umount -l "$MOUNTPOINT_UNION/dev"
+	sudo umount -l "$MOUNTPOINT_UNION/proc"
+	#sudo umount "$MOUNTPOINT_UNION/boot"
 #	fusermount -u "$MOUNTPOINT_UNION/automake" 2>/dev/null # Puppy
-	fusermount -u "$MOUNTPOINT_UNION" 2>/dev/null
-	#fusermount -u "$MOUNTPOINT_UNIONFS/root" 2>/dev/null
-	sudo umount "$MOUNTPOINT_UNIONFS/root" 2>/dev/null
+	#fusermount -u "$MOUNTPOINT_UNION"
+	sudo umount -l "$MOUNTPOINT_UNION"
+	sudo umount -l "$MOUNTPOINT_UNIONFS/root" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
 	rmdir "$MOUNTPOINT_UNIONFS/root"
-	rmdir "$MOUNTPOINT_UNIONFS/rw"
+	rm -rf "$MOUNTPOINT_UNIONFS/rw"
 	rmdir "$MOUNTPOINT_UNIONFS"
 	rmdir "$MOUNTPOINT_UNION"
 	#rmdir "$MOUNTPOINT_ISO"
@@ -39,12 +48,12 @@ atexit() {
 
 
 
-if [ "$1x" == "x" ] ; then
+if [ "x$OSIMAGE" == "x" ] ; then
 	echo "Please specify a ISO or squashfs base system to run the AppImage on"
 	exit 1
 fi
 
-if [ "$2x" == "x" ] ; then
+if [ "x$APPIMAGE" == "x" ] ; then
 	echo "Please specify an AppDir or AppImage to be run"
 	exit 1
 fi
@@ -54,8 +63,8 @@ mkdir -p "$MOUNTPOINT_UNIONFS/rw" # Unionfs rw
 mkdir -p "$MOUNTPOINT_UNION" # Overlay
 
 # If ISO was specified, then mount it and find contained filesystem
-if [ ${1##*.} == "iso" ] ; then
-	ISO="$1"
+if [ ${OSIMAGE##*.} == "iso" ] ; then
+	ISO="$OSIMAGE"
 
 	echo "Mounting ISO $ISO on $MOUNTPOINT_ISO"
 
@@ -77,31 +86,32 @@ if [ ${1##*.} == "iso" ] ; then
 		exit 1
 	fi
 else
-	SQUASHFS="$1"
+	SQUASHFS="$OSIMAGE"
 fi
 
 echo "Using SquashFS $SQUASHFS"
 sudo mount -o loop,ro "$SQUASHFS" "$MOUNTPOINT_UNIONFS/root" || exit 1
 
 #unionfs-fuse -o allow_other,use_ino,suid,dev,nonempty -ocow,chroot=$MOUNTPOINT_UNIONFS/,max_files=32768 /rw=RW:/root=RO $MOUNTPOINT_UNION
-unionfs -o allow_other,use_ino,suid,dev,nonempty -o cow,chroot="$MOUNTPOINT_UNIONFS" /rw=RW:/root=RO "$MOUNTPOINT_UNION"
+unionfs -o allow_other,use_ino,suid,dev,nonempty -o cow "$MOUNTPOINT_UNIONFS/rw"=RW:"$MOUNTPOINT_UNIONFS/root"=RO "$MOUNTPOINT_UNION" || exit 1
 
-ls $MOUNTPOINT_UNION/boot >/dev/null && MNT=/boot
-#ls $MOUNTPOINT_UNION/automake >/dev/null && MNT=/automake || echo "" # Puppy
+ls "$MOUNTPOINT_UNION/boot" >/dev/null && MNT=/boot
+#ls "$MOUNTPOINT_UNION/automake" >/dev/null && MNT=/automake || echo "" # Puppy
 
 if [ "x$MNT" == "x" ]; then
 	echo "Could not find free mountpoint"
 	exit 1
 fi
 
-if [ -f "$2" ] ; then
-	mount "$2" "$MOUNTPOINT_UNION/$MNT" -o loop
-elif [ -d "$2" ] ; then
-	mount "$2" "$MOUNTPOINT_UNION/$MNT" -o bind
+if [ -f "$APPIMAGE" ] ; then # AppImage
+	sudo mount "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT" -o loop
+elif [ -d "$APPIMAGE" ] ; then # AppDir
+	sudo mount "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT" -o bind
 fi
 
 cat > "$MOUNTPOINT_UNION/run.sh" <<EOF
 #!/bin/sh
+export PATH=/bin:/usr/bin
 cat /etc/*release
 echo ""
 rm -rf /etc/pango
@@ -111,27 +121,39 @@ pango-querymodules > '/etc/pango/pango.modules' # otherwise only squares instead
 echo ""
 echo "===================================================="
 echo ""
-LD_LIBRARY_PATH=$MNT/usr/lib:$MNT/lib/:$LD_LIBRARY_PATH ldd $MNT/usr/bin/*  $MNT/usr/lib/* 2>/dev/null | grep "not found" | sort | uniq
+LD_LIBRARY_PATH="$MNT/usr/lib:$MNT/lib/:$LD_LIBRARY_PATH" ldd "$MNT"/usr/bin/* "$MNT"/usr/lib/* 2>/dev/null | grep "not found" | sort | uniq
 echo ""
 echo "===================================================="
 echo ""
 export HOME="/root" 
 export LANG="en_EN.UTF-8"
 # export QT_PLUGIN_PATH=./lib/qt4/plugins ###################### !!!
-dbus-launch $MNT/AppRun || $MNT/AppRun
+cd "$MNT"
+./AppRun
+#bash
 EOF
 
 chmod a+x "$MOUNTPOINT_UNION/run.sh"
-mount -t proc proc "$MOUNTPOINT_UNION/proc"
-mount --bind /var/lib/dbus "$MOUNTPOINT_UNION/var/lib/dbus"
-touch "$MOUNTPOINT_UNION/etc/resolv.conf" || echo ""
-mount --bind /etc/resolv.conf "$MOUNTPOINT_UNION/etc/resolv.conf"
+sudo mount -t proc proc "$MOUNTPOINT_UNION/proc"
+sudo mount -t sysfs sys "$MOUNTPOINT_UNION/sys/"
+sudo mount --bind /dev "$MOUNTPOINT_UNION/dev"
+sudo mount --bind /dev/shm "$MOUNTPOINT_UNION/dev/shm"
+sudo mount -t devpts pts "$MOUNTPOINT_UNION/dev/pts"
+sudo mount --bind /var/run "$MOUNTPOINT_UNION/var/run" # pulse
+#sudo mount --bind /tmp "$MOUNTPOINT_UNION/tmp" # pulse
+sudo mount --bind /var/lib/dbus "$MOUNTPOINT_UNION/var/lib/dbus" # pulse (and more)
+sudo mkdir "$MOUNTPOINT_UNION/root/.pulse" # pulse
+sudo mount --bind ~/.pulse "$MOUNTPOINT_UNION/root/.pulse" # pulse
+sudo touch "$MOUNTPOINT_UNION/etc/resolv.conf" || echo ""
+sudo mount --bind /etc/resolv.conf "$MOUNTPOINT_UNION/etc/resolv.conf"
 xhost local: # otherwise "cannot open display: :0.0"
 
 echo ""
 echo "===================================================="
 echo ""
-chroot "$MOUNTPOINT_UNION/" /run.sh # $MNT/AppRun
+sudo chroot "$MOUNTPOINT_UNION" /run.sh # $MNT/AppRun
+#cd "$MOUNTPOINT_UNION"
+#sudo systemd-nspawn
 echo ""
 echo "===================================================="
 echo ""

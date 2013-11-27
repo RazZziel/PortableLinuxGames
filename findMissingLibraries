@@ -7,15 +7,18 @@
 # and detect which libraries are loaded in runtime.
 
 opt_copy=
+bin=./AppRun
 while getopts "c" arg; do
 	case $arg in
 	c)
 		opt_copy=1
+		shift $((OPTIND-1))
 		;;
       esac
 done
-shift $((OPTIND-1))
 
+bin="${1:-./AppRun}"
+bin="$(readlink -f "$bin")"
 
 process() {
 	while read -r line; do
@@ -32,5 +35,5 @@ process() {
 	done
 }
 
-export APPRUN_STRACE=1
-./AppRun | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*" | process
+export APPRUN_HELPERS="strace"
+"$bin" | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*" | process

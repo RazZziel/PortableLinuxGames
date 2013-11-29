@@ -22,7 +22,22 @@ if [ -z "$*" ]; then
 	exit
 fi
 
-case $(cat /etc/issue | head -n 1) in
+
+Distro="$(cat /etc/issue | head -n 1)"
+
+case "$Distro" in
+	Arch*)
+		Tag="archlinux"
+		;;
+	Ubuntu*)
+		Tag="ubuntu"
+		;;
+	Debian*)
+		Tag="debian"
+		;;
+esac
+
+case "$Distro" in
 	Arch*)
 		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
 		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
@@ -90,7 +105,7 @@ MainPackageVersion=
 MainPackageURL=
 MainPackageDeveloper=
 MainPackageLicenses=
-Suffix=-archlinux
+Suffix="-$Tag"
 
 declare -a pkgs=()
 declare -a files=()
@@ -265,27 +280,28 @@ fi
 			echo "Patching absolute paths in ./$PackageExec"
 			"$pg4l_dir/patchAbsolutePaths" "./$PackageExec"
 		}
-
-		[ -f AppRun.desktop ] || {
-			[ "$MainPackageVersion" ] || {
-				"! Main package version not found, using _VERSION_" >&2
-				MainPackageVersion=_VERSION_
-			}
-			echo "Creating AppRun.desktop from '$PackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
-			cp "$pg4l_dir/AppRun.desktop" .
-
-			desktopFile_setParameter "AppRun.desktop" "Name" "$PackageName $MainPackageVersion-r1$Suffix"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$PackageName"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Developer" "$MainPackageDeveloper"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-Licenses" "$MainPackageLicenses"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$MainPackage"
-			desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFile"
-		}
-
 	done
+
+	[ -f AppRun.desktop ] || {
+		[ "$MainPackageVersion" ] || {
+			"! Main package version not found, using _VERSION_" >&2
+			MainPackageVersion=_VERSION_
+		}
+		echo "Creating AppRun.desktop from '$MainPackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
+		cp "$pg4l_dir/AppRun.desktop" .
+
+		desktopFile_setParameter "AppRun.desktop" "Name" "$MainPackageName $MainPackageVersion-r1$Suffix"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$MainPackageName"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-URL" "$MainPackageURL"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Developer" "$MainPackageDeveloper"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Licenses" "$MainPackageLicenses"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$MainPackage"
+		#desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFile"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFileNames"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "linker,$Tag"
+	}
 
 	[ -f AppRun ] || {
 		[ "$MainPackageExec" ] || {

@@ -8,6 +8,18 @@ set -e
 HERE=$(dirname $(readlink -f "${0}"))
 export PATH=$HERE:$PATH
 
+opt_shell=
+while getopts "s" arg; do
+	case $arg in
+	s)
+		opt_shell=1
+		shift $((OPTIND-1))
+		;;
+      esac
+done
+
+
+
 OSIMAGE="$1"
 APPIMAGE="$2"
 
@@ -21,8 +33,6 @@ trap atexit EXIT
 atexit() {
 	set +e
 	echo "Cleaning up..."
-	sleep 1
-	killall unionfs
 	sudo umount -l "$APPIMAGE"
 	sudo umount -l "$MOUNTPOINT_UNION/var/lib/dbus"
 	sudo umount -l "$MOUNTPOINT_UNION/etc/resolv.conf"
@@ -34,18 +44,18 @@ atexit() {
 #	fusermount -u "$MOUNTPOINT_UNION/automake" 2>/dev/null # Puppy
 	#fusermount -u "$MOUNTPOINT_UNION"
 	sudo umount -l "$MOUNTPOINT_UNION"
+	killall unionfs # Just in case.
 	sudo umount -l "$MOUNTPOINT_UNIONFS/root" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
 	fusermount -u "$MOUNTPOINT_ISO" 2>/dev/null
-	rmdir "$MOUNTPOINT_UNIONFS/root"
+	rmdir "$MOUNTPOINT_UNIONFS/root" || ls "$MOUNTPOINT_UNIONFS/root"
 	rm -rf "$MOUNTPOINT_UNIONFS/rw"
-	rmdir "$MOUNTPOINT_UNIONFS"
-	rmdir "$MOUNTPOINT_UNION"
-	#rmdir "$MOUNTPOINT_ISO"
-	rmdir "$WORKDIR"
+	rmdir "$MOUNTPOINT_UNIONFS" || ls "$MOUNTPOINT_UNIONFS"
+	rmdir "$MOUNTPOINT_UNION" || ls "$MOUNTPOINT_UNION"
+	#rmdir "$MOUNTPOINT_ISO" || ls "$MOUNTPOINT_ISO"
+	rmdir "$WORKDIR" || ls "$WORKDIR"
 }
-
 
 
 if [ "x$OSIMAGE" == "x" ] ; then
@@ -95,7 +105,7 @@ sudo mount -o loop,ro "$SQUASHFS" "$MOUNTPOINT_UNIONFS/root" || exit 1
 #unionfs-fuse -o allow_other,use_ino,suid,dev,nonempty -ocow,chroot=$MOUNTPOINT_UNIONFS/,max_files=32768 /rw=RW:/root=RO $MOUNTPOINT_UNION
 unionfs -o allow_other,use_ino,suid,dev,nonempty -o cow "$MOUNTPOINT_UNIONFS/rw"=RW:"$MOUNTPOINT_UNIONFS/root"=RO "$MOUNTPOINT_UNION" || exit 1
 
-ls "$MOUNTPOINT_UNION/boot" >/dev/null && MNT=/boot
+ls "$MOUNTPOINT_UNION/mnt" >/dev/null && MNT=/mnt
 #ls "$MOUNTPOINT_UNION/automake" >/dev/null && MNT=/automake || echo "" # Puppy
 
 if [ "x$MNT" == "x" ]; then
@@ -104,33 +114,50 @@ if [ "x$MNT" == "x" ]; then
 fi
 
 if [ -f "$APPIMAGE" ] ; then # AppImage
-	sudo mount "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT" -o loop
+	echo "Mounting AppImage $APPIMAGE"
+	#RUNNABLE="/mnt/$(basename "$APPIMAGE")"
+	#sudo mount --bind "$APPIMAGE" "$MOUNTPOINT_UNION/$UNNABLE"
+	RUNNABLE="$(readlink -f "/$MNT/AppRun")"
+	sudo mount -o loop "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT"
 elif [ -d "$APPIMAGE" ] ; then # AppDir
-	sudo mount "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT" -o bind
+	echo "Mounting AppDir $APPIMAGE"
+	RUNNABLE="$(readlink -f "/$MNT/AppRun")"
+	sudo mount --bind "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT"
 fi
 
 cat > "$MOUNTPOINT_UNION/run.sh" <<EOF
 #!/bin/sh
+
 export PATH=/bin:/usr/bin
-cat /etc/*release
-echo ""
-rm -rf /etc/pango
-mkdir -p /etc/pango
-pango-querymodules > '/etc/pango/pango.modules' # otherwise only squares instead of text
-[ -f /si-chroot ] && ln -s /lib/ld-lsb.so.3 /lib/ld-linux.so.2
-echo ""
-echo "===================================================="
-echo ""
-LD_LIBRARY_PATH="$MNT/usr/lib:$MNT/lib/:$LD_LIBRARY_PATH" ldd "$MNT"/usr/bin/* "$MNT"/usr/lib/* 2>/dev/null | grep "not found" | sort | uniq
-echo ""
-echo "===================================================="
-echo ""
 export HOME="/root" 
 export LANG="en_EN.UTF-8"
 # export QT_PLUGIN_PATH=./lib/qt4/plugins ###################### !!!
-cd "$MNT"
-./AppRun
-#bash
+
+cat /etc/*release
+echo ""
+
+rm -rf /etc/pango
+mkdir -p /etc/pango
+pango-querymodules > '/etc/pango/pango.modules' 2>/dev/null # otherwise only squares instead of text
+[ -f /si-chroot ] && ln -s /lib/ld-lsb.so.3 /lib/ld-linux.so.2
+
+echo "*** ldd "$MNT"/usr/{bin,lib}"
+LD_LIBRARY_PATH="$MNT/usr/lib:$MNT/lib/:$LD_LIBRARY_PATH" ldd "$MNT"/usr/{bin,lib}/* 2>/dev/null | grep "not found" | sort | uniq
+echo ""
+
+if [ "$opt_shell" ]; then
+	DIR="$(dirname "$RUNNABLE")"
+	echo "*** Opening shell on \${DIR}. Runnable is $(basename "$RUNNABLE")."
+	cd "\$DIR"
+	if [ -x /bin/bash ]; then /bin/bash
+	elif [ -x /bin/sh ]; then /bin/sh
+	else echo "No shell found"
+	fi
+else
+	echo "*** Running ${RUNNABLE}..."
+	./$RUNNABLE
+	echo "*** $RUNNABLE finished with exit code $?"
+fi
 EOF
 
 chmod a+x "$MOUNTPOINT_UNION/run.sh"
@@ -148,14 +175,14 @@ sudo touch "$MOUNTPOINT_UNION/etc/resolv.conf" || echo ""
 sudo mount --bind /etc/resolv.conf "$MOUNTPOINT_UNION/etc/resolv.conf"
 xhost local: # otherwise "cannot open display: :0.0"
 
-echo ""
-echo "===================================================="
-echo ""
+echo
+echo "=== Entering chroot $MOUNTPOINT_UNION"
+echo
 sudo chroot "$MOUNTPOINT_UNION" /run.sh # $MNT/AppRun
 #cd "$MOUNTPOINT_UNION"
 #sudo systemd-nspawn
-echo ""
-echo "===================================================="
-echo ""
+echo
+echo "=== Leaving chroot"
+echo
 
 exit $?

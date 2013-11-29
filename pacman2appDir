@@ -101,6 +101,7 @@ AUTOCOPYLIBS=1
 MainPackage=
 MainPackageFile=
 MainPackageExec=
+MainPackageName=
 MainPackageVersion=
 MainPackageURL=
 MainPackageDeveloper=
@@ -129,7 +130,8 @@ for i in $@; do
 		*)
 			if [ -f "$i" ]; then
 				# Argument is a file
-				files+=("$(readlink -f "$i")")
+				file="$(readlink -f "$i")"
+				files+=($file)
 				for dep in $(find_dependencies_file $i); do
 					pkgs+=("$dep")
 				done
@@ -211,10 +213,13 @@ done
 	exit 1;
 }
 
+MainPackageFileNames=
 for i in $files; do
+	MainPackageFileNames+="$(basename "$i");"
 	if [ ! "$MainPackageVersion" ]; then
 		MainPackage=$(file_name_file $i)
 		MainPackageFile=$(basename $i)
+		MainPackageName="$MainPackage"
 		MainPackageVersion=$(find_version_file $i)
 		MainPackageURL=$(file_url_file $i)
 		MainPackageDeveloper=$(file_developer_file $i)
@@ -230,6 +235,7 @@ for i in $files; do
 		fi
 	fi
 done
+MainPackageFileNames=${MainPackageFileNames%?} # Trim last semicolon
 
 if [ "$UNPACK" ]; then
 	for i in $files; do
@@ -251,6 +257,7 @@ fi
 
 		[ "$MainPackageExec" ] || {
 			echo "  Using it as main program"
+			MainPackageName="$PackageName"
 			MainPackageExec=$(basename $PackageExec)
 
 			IconFile="./$PackageIcon"

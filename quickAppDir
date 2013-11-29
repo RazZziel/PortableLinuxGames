@@ -8,16 +8,21 @@ if [ -z "$*" ]; then
 	echo "Usage: $0 [binary]"
 fi
 
-if [ -f "$1" -a "${1##*.}" = "jar" ]; then
-	cp -v "$pg4l_dir"/AppRun_java AppRun || exit 1
-else
-	cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
-fi
-
 for i in util.sh AppRun.desktop AppRun.png; do
 	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
 done
 
+if [ -f "$1" -a "${1##*.}" = "jar" ]; then
+	cp -v "$pg4l_dir"/AppRun_java AppRun || exit 1
+	desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "java"
+else
+	cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+fi
+
 if [ $1 ]; then
 	sed -e "s|_BINARY_|$1|g" AppRun -i
+	desktopFile_setParameter "AppRun.desktop" "Name" "$1 r1"
+	desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$1"
 fi
+
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"

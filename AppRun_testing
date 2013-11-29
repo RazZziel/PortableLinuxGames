@@ -1,0 +1,32 @@
+#!/bin/sh
+# Author : Ismael Barros² <ismael@barros2.org>
+# License : BSD http://en.wikipedia.org/wiki/BSD_license
+
+export APPDIR="$(dirname "$(readlink -f "$0")")"
+export APPPKG="$(basename "$APPIMAGE")"
+LOGFILE=$(mktemp "/tmp/AppRun-log-${APPPKG}.XXXXXXXXXX")
+
+BINARY="_BINARY_"
+BINARY_ARGS=
+
+cd "$APPDIR"
+. ./util.sh
+
+export PATH="$PWD/usr/bin/:$PATH"
+
+[ -z "$*" ] && show_usage "usage.txt"
+
+setup_keepResolution
+
+ret=0
+cd usr/
+{
+	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
+	run_withLocalLibs run_elf ./"$BINARY" $BINARY_ARGS $@
+	ret=$?
+} 2>&1 | tee "$LOGFILE"
+
+[ $ret != 0 -a $ret != -1 ] && {
+	build_report "$LOGFILE" "$BINARY" > "${LOGFILE}.html"
+	xdg-open "${LOGFILE}.html" &
+}

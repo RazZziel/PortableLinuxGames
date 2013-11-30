@@ -88,12 +88,23 @@ if [ ${OSIMAGE##*.} == "iso" ] ; then
 
 	# Fedora-like ISOs
 	elif [ -e "$MOUNTPOINT_ISO/LiveOS/squashfs.img" ] ; then
-		SQUASHFS="$MOUNTPOINT_ISO/LiveOS/ext3fs.img" || exit 1
-		sudo mount -o loop,ro "$MOUNTPOINT_ISO/LiveOS/squashfs.img" "$MOUNTPOINT_ISO/"
+		SQUASHFS="$MOUNTPOINT_ISO/LiveOS/ext3fs.img"
+		#SQUASHFS="$MOUNTPOINT_ISO/LiveOS/squashfs.img"
+		#sudo mount -o loop,ro "$MOUNTPOINT_ISO/LiveOS/squashfs.img" "$MOUNTPOINT_ISO" || exit 1
 	
 	else
-		echo "Unknown distro"
-		exit 1
+		# OpenSUSE-like ISOs
+		openSuseSquash="$(ls -1 "$MOUNTPOINT_ISO"/openSUSE-*-livecd* | head -n1)"
+		if [ -e "$openSuseSquash" ] ; then
+			SQUASHFS="$openSuseSquash"
+			echo "Actually, OpenSUSE doesn't work for now, sorry!"
+			exit 1
+		else
+			echo "Unknown distro"
+			echo "Contents of $MOUNTPOINT_ISO:"
+			ls -l "$MOUNTPOINT_ISO"
+			exit 1
+		fi
 	fi
 else
 	SQUASHFS="$OSIMAGE"

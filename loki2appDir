@@ -92,6 +92,7 @@ desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$packageName"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$packageVersion"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "Loki"
 
 #echo "Creating AppRun with Exec='$binFilename'..."
 #$pg4l_dir/buildAppImage || die "Could not build AppImage"

@@ -9,11 +9,11 @@ if [ -z "$*" ]; then
 fi
 
 for i in util.sh AppRun.desktop AppRun.png; do
-	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
+	{ [ -f "$i" ] || cp -v "$pg4l_dir/data/$i" "$i"; } || exit 1
 done
 
 if [ -f "$1" -a "${1##*.}" = "jar" ]; then
-	cp -v "$pg4l_dir"/AppRun_java AppRun || exit 1
+	cp -v "$pg4l_dir/data/AppRun_java" AppRun || exit 1
 	desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "java"
 else
 	cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1

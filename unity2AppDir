@@ -19,16 +19,17 @@ appDir="$PWD"
 #cp -av "$binary" "${appName}_Data" "$appDir" || exit 1
 #pushd "$appDir"
 
-cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+cp -v "$pg4l_dir/data/AppRun_quick" AppRun || exit 1
 for i in AppRun.desktop AppRun.png util.sh; do
-	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
+	{ [ -f "$i" ] || cp -v "$pg4l_dir/data/$i" "$i"; } || exit 1
 done
 
 sed -e "s|_BINARY_|$binary|g" AppRun -i
-desktopFile_setParameter "AppRun.desktop" "Name" "$appName r1"
+Suffix=-unity
+desktopFile_setParameter "AppRun.desktop" "Name" "$appName r1$suffix"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$appName"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$appName"
-desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "unity"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "Unity"
 
 #popd

@@ -295,7 +295,7 @@ fi
 			MainPackageVersion=_VERSION_
 		}
 		echo "Creating AppRun.desktop from '$MainPackageName $MainPackageVersion' ($i, Exec=$PackageExec)..."
-		cp "$pg4l_dir/AppRun.desktop" .
+		cp "$pg4l_dir/data/AppRun.desktop" .
 
 		desktopFile_setParameter "AppRun.desktop" "Name" "$MainPackageName $MainPackageVersion-r1$Suffix"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$MainPackageName"
@@ -317,7 +317,7 @@ fi
 		}
 
 		echo "Creating AppRun with Exec='${MainPackageExec}'..."
-		cp "$pg4l_dir/AppRun" .
+		cp "$pg4l_dir/data/AppRun_linker" .
 		
 		sed -e"s|_BINARY_|bin/$MainPackageExec|g" AppRun -i
 		chmod +x AppRun

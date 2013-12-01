@@ -100,13 +100,14 @@ optipng "$appDirPath"/AppRun.png >/dev/null
 
 
 cd "$appDirPath"
-cp $pg4l_dir/AppRun.desktop .
+cp $pg4l_dir/data/AppRun.desktop .
 cp $pg4l_dir/util.sh .
 Suffix=-nix
 desktopFile_setParameter "AppRun.desktop" "Name" "$packageName r1$Suffix"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$packageVersion"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "NIX"
 
 echo "Creating AppRun with Exec='$binFilename'..."
 

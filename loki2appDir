@@ -91,7 +91,7 @@ desktopFile_setParameter "AppRun.desktop" "Name" "$packageName $packageVersion-r
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$packageName"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$packageVersion"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
-desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackages" "$(basename "$pkg")"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "Loki"
 
 #echo "Creating AppRun with Exec='$binFilename'..."

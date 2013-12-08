@@ -180,7 +180,7 @@ cp $pg4l_dir/data/AppRun.desktop .
 Suffix=-lgp
 desktopFile_setParameter "AppRun.desktop" "Name" "$packageName r1$Suffix"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
-desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$(basename "$pkg")"
+desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackages" "$(basename "$pkg")"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "LGP"
 
 echo "Creating AppRun with Exec='$binFilename'..."

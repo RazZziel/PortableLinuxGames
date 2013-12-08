@@ -39,16 +39,41 @@ esac
 
 case "$Distro" in
 	Arch*)
-		find_dependencies_package() { pacman -Si $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
-		find_dependencies_file() { pacman -Qip $1 | egrep "Depends On" | grep -v None | cut -d: -f2; }
-		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | egrep -v None | cut -d: -f2); echo ${v%-*}; }
-		file_name_file() { pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2- | trimp; }
-		file_url_file() { pacman -Qip $1 | egrep "URL" | egrep -v None | cut -d: -f2- | trimp; }
-		file_developer_file() { echo ""; }
-		file_licenses_file() { pacman -Qip $1 | egrep "Licenses" | egrep -v None | cut -d: -f2- | trimp; }
-		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
+		getPackageInfo() {
+			if [ -f "$1" ]; then
+				pacman -Qip "$1"
+			else
+				pacman -Si "$1"
+			fi
+
+		}
+		getPackageInfoField() {
+			pacman_getInfo "$1" | egrep "$2" | cut -d: -f2- | trimp
+		}
+
+		find_dependencies() {
+
+			# TODO: Remove version numbers
+			#for pkg in ${pkgs[@]}; do
+			#	pkgs=(${pkgs[@]/#$pkg/${pkg%%[<>=]*}})
+			#done
+
+			parsedeps() { egrep "Depends On" | grep -v None; }
+			if [ -f "$1" ]; then
+				pacman -Qip $1 | parsedeps
+			else
+				pacman -Si $1 | parsedeps
+			fi
+		}
+		getPackageName() { getPackageInfoField "$1" "Name"; }
+		getPackageVersion() { v=$(getPackageInfoField "$1" "Version"); echo ${v%-*}; }
+		getPackageURL() { getPackageInfoField "$1" "URL"; }
+		getPackageDeveloper() { true; }
+		getPackageLicenses() { getPackageInfoField "$1" "Licenses"; }
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar.xz 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
+		package_files() { pacman -Ql "$1"; }
+		install_package() { yaourt -S "$1"; }
 		download_package() {
 			case "$1" in
 			aur/*)
@@ -72,15 +97,82 @@ case "$Distro" in
 				;;
 			esac
 		}
+
+		fixAppDir() {
+			rm -vf usr/bin/{ar,as,nm,gprof,elfedit,ld,ld.*,objcopy,objdump,makehrtf,c++filt,addr2line,curl,*-config,*-info,png2pnm,pnm2png,ranlib,readelf,size,strings,strip,wxrc*,xml2-config,xmlcatalog,xmllint,glewinfo,visualinfo,cjpeg,desktop-file-*,djpeg,jpegtran,lua,luac,rdjpgcom,update-desktop-database,wrjpgcom}
+		}
+
+		cleanAppDir() {
+			rm .INSTALL .PKGINFO
+		}
+
 		;;
+
 	Ubuntu* | Debian*)
-		find_dependencies_package() { apt-get info $1; }
-		find_dependencies_file() { dpkg info $1; }
-		find_version_file() { v=$(pacman -Qip $1 | egrep "Version" | grep -v None | cut -d: -f2); echo ${v%-*}; }
-		find_package_file() { v=$(pacman -Qip $1 | egrep "Name" | egrep -v None | cut -d: -f2); echo $v | sed -e "s/^ *//"; }
-		find_file_for_package() { ls -1t /var/cache/apt/archives/$1-+([^-])-+([0-9])-+([^.]).deb 2>/dev/null| head -n1; }
-		uncompress_package_file() { dpkg-deb -x $1; }
-		download_package() { sudo apt-get -y --force-yes --download-only install "$1"; }
+		getPackageInfo() {
+			if [ -f "$1" ]; then
+				dpkg --info "$1"
+			else
+				apt-get show "$1"
+			fi
+		}
+		getPackageInfoField() {
+			getPackageInfo "$1" | egrep "$2" | cut -d: -f2- | trimp
+		}
+
+		find_dependencies() {
+			parsedeps() { grep Depends | cut -d: -f2- | sed -e"s/,/\n/g" | trimp | cut -d" " -f1; }
+			if [ -f "$1" ]; then
+				dpkg --info "$1" | parsedeps
+			else
+				apt-cache show "$1" | parsedeps
+			fi
+ 		}
+		getPackageName() { getPackageInfoField "$1" "Package"; }
+		getPackageVersion() { v=$(getPackageInfoField "$1" "Version"); echo ${v%-*}; }
+		getPackageURL() { getPackageInfoField "$1" "Homepage"; }
+		getPackageDeveloper() { true; }
+		getPackageLicenses() { true; }
+		find_file_for_package() { ls -1t /var/cache/apt/archives/${1}_*_{all,i386}.deb 2>/dev/null| head -n1; }
+		uncompress_package_file() { dpkg-deb -x "$1" .; }
+		package_files() { dpkg -L "$1"; }
+		download_package() { sudo apt-get -y --force-yes --download-only install --reinstall "$1"; }
+		install_package() { sudo apt-get -y --force-yes install "$1"; }
+
+		fixAppDir() {
+			ls lib/i386-linux-gnu/
+			if [ -d usr/games/ ]; then
+				mkdir -p usr/bin/
+				mv -v usr/games/* usr/bin/
+				rmdir -v usr/games
+			fi
+
+			# etc/ld.so.conf.d/i686-linux-gnu.conf
+			if [ -d lib/i386-linux-gnu/ ]; then
+				mkdir -p usr/lib/
+				rsync -av lib/i386-linux-gnu/ usr/lib/
+				rm -rf lib/i386-linux-gnu
+				unlink lib/ld-linux.so.2
+				rmdir -v lib
+			fi
+			if [ -d usr/lib/i386-linux-gnu/ ]; then
+				mkdir -p usr/lib/
+				rsync -av usr/lib/i386-linux-gnu/ usr/lib/
+				rm -rf usr/lib/i386-linux-gnu/
+			fi
+
+			rm -f etc/ld.so.conf.d/i686-linux-gnu.conf
+			rmdir etc/ld.so.conf.d/
+			rmdir etc/
+
+			rm -rf usr/share/menu/
+			rm -rf usr/share/lintian/
+		}
+
+		cleanAppDir() {
+			true
+		}
+
 		;;
 	*)
 		echo "Distro not supported"
@@ -95,6 +187,7 @@ BRINGUP=1
 
 CREATE_APPDIR=1
 AUTOCOPYLIBS=1
+INSTALLPKGS=
 
 
 
@@ -110,8 +203,7 @@ Suffix="-$Tag"
 
 declare -a pkgs=()
 declare -a files=()
-declare -a ignore=("hicolor-icon-theme" "libgl")
-
+declare -a ignore=()
 
 # Recolect list of packages
 for i in $@; do
@@ -121,6 +213,7 @@ for i in $@; do
 		--skip-cleanup) CLEANUP=; shift ;;
 		--skip-bringup) BRINGUP=; shift ;;
 		--skip-auto-copy-libs) AUTOCOPYLIBS=; shift ;;
+		--install-pkgs) INSTALLPKGS=1; shift ;;
 
 		--here) CREATE_APPDIR=; shift ;;
 
@@ -132,18 +225,15 @@ for i in $@; do
 				# Argument is a file
 				file="$(readlink -f "$i")"
 				files+=($file)
-				for dep in $(find_dependencies_file $i); do
-					pkgs+=("$dep")
-				done
 
 			else
 				# Argument is the name of a package
 				pkgs+=("$i")
-				for dep in $(find_dependencies_package $i); do
-					pkgs+=("$dep")
-				done
 			fi
 
+			for dep in $(find_dependencies "$i"); do
+				pkgs+=("$dep")
+			done
 			;;
 	esac
 done
@@ -163,19 +253,24 @@ done
 
 
 if [ "$pkgs" ]; then
-	pkgs+=("xdg-utils")
-
-	# Automatically substitute virtual package libjpeg with a real package
-	#pkgs=(${pkgs[@]/libjpeg/libjpeg-turbo})
+	case "$Distro" in
+		Arch*)
+			pkgs+=("xdg-utils")
+			ignore+=("hicolor-icon-theme" "libgl")
+			;;
+		Ubuntu* | Debian*)
+			pkgs+=("xdg-utils")
+			ignore+=("libgl1-mesa-glx")
+			;;
+	esac
 
 	for ign in ${ignore[@]}; do
-		echo "Ignoring $ign ..."
-		pkgs=(${pkgs[@]/#$ign/})
-	done
-
-	# Remove version numbers
-	for pkg in ${pkgs[@]}; do
-		pkgs=(${pkgs[@]/#$pkg/${pkg%%[<>=]*}})
+		for (( i=0; i<=$(( ${#pkgs[*]} -1 )); i++ )); do
+			if [ "$ign" = "${pkgs[$i]}" ]; then
+				echo "Ignoring $ign ..."
+				unset pkgs[$i]
+			fi
+		done
 	done
 
 	echo "These packages will be included:"
@@ -189,7 +284,11 @@ fi
 if [ "$DOWNLOAD" ]; then
 	# Make sure all packages are downloaded
 	for pkg in ${pkgs[@]}; do
-		download_package "$pkg" || exit
+		if [ "$INSTALLPKGS" ]; then
+			install_package "$pkg" || exit
+		else
+			download_package "$pkg" || exit
+		fi
 	done
 else
 	echo "Skipping download"
@@ -217,18 +316,18 @@ MainPackageFileNames=
 for i in $files; do
 	MainPackageFileNames+="$(basename "$i");"
 	if [ ! "$MainPackageVersion" ]; then
-		MainPackage=$(file_name_file $i)
-		MainPackageFile=$(basename $i)
+		MainPackage=$(getPackageName "$i")
+		MainPackageFile=$(basename "$i")
 		MainPackageName="$MainPackage"
-		MainPackageVersion=$(find_version_file $i)
-		MainPackageURL=$(file_url_file $i)
-		MainPackageDeveloper=$(file_developer_file $i)
-		MainPackageLicenses=$(file_licenses_file $i)
+		MainPackageVersion=$(getPackageVersion "$i")
+		MainPackageURL=$(getPackageURL "$i")
+		MainPackageDeveloper=$(getPackageDeveloper "$i")
+		MainPackageLicenses=$(getPackageLicenses "$i")
 		echo "Assuming main package is $MainPackageFile with version $MainPackageVersion"
 
 		if [ "$CREATE_APPDIR" ]; then
-			package_name=$(find_package_file $i)
-			appDir_path=$PWD/${package_name}.AppDir
+			[ "$MainPackage" ] || { die "Could not find package name"; }
+			appDir_path="$PWD/${MainPackage}.AppDir"
 			echo "Using AppDir $appDir_path ..."
 			mkdir -pv "$appDir_path" || exit 1
 			cd "$appDir_path" || exit 1
@@ -238,10 +337,34 @@ done
 MainPackageFileNames=${MainPackageFileNames%?} # Trim last semicolon
 
 if [ "$UNPACK" ]; then
-	for i in $files; do
-		echo "Uncompressing $i ..."
-		uncompress_package_file $i || exit 1
-	done
+	if [ "$INSTALLPKGS" ]; then
+		for i in ${pkgs[@]}; do
+			echo "Copying files of package $i ..."
+			for i in $(package_files "$i"); do
+				if [ -d "$i" ]; then
+					mkdir ./"$i"
+				elif [ -f "$i" ]; then
+					cp -av "$i" ./"$i"
+				fi
+			done
+		done
+	else
+		for i in $files; do
+			echo "Uncompressing $i ..."
+			uncompress_package_file "$i" || exit 1
+		done
+	fi
+
+
+	# Force applications to use usr instead of opt
+	if [ -d opt ]; then
+		mkdir -p usr/
+		mv -v opt/* usr/
+		rmdir opt
+	fi
+
+	
+	fixAppDir
 else
 	echo "Skipping unpack"
 fi
@@ -249,9 +372,9 @@ fi
 
 [ "$BRINGUP" ] && {
 	for i in $(ls -1 usr/share/applications/*.desktop 2>/dev/null); do
-		PackageName=$(egrep Name $i | head -n1 | cut -d= -f2)
-		PackageExec=$(egrep Exec $i | head -n1 | cut -d= -f2)
-		PackageIcon=$(egrep Icon $i | head -n1 | cut -d= -f2)
+		PackageName=$(desktopFile_getParameter "$i" "Name")
+		PackageExec=$(desktopFile_getParameter "$i" "Exec")
+		PackageIcon=$(desktopFile_getParameter "$i" "Icon")
 
 		echo "Found .desktop file '$PackageName' ($PackageExec)"
 
@@ -275,7 +398,7 @@ fi
 					mv -v AppRun-0.png AppRun.png
 					rm -v AppRun-?.png
 				}
-				optipng AppRun.png 2>/dev/null
+				optipng AppRun.png >/dev/null 2>/dev/null
 			else
 				echo "! Icon $PackageIcon not found" >&2
 				echo "usr/share/pixmaps:" >&2
@@ -289,7 +412,7 @@ fi
 		}
 	done
 
-	[ -f AppRun.desktop ] || {
+	if [ ! -f AppRun.desktop ]; then
 		[ "$MainPackageVersion" ] || {
 			"! Main package version not found, using _VERSION_" >&2
 			MainPackageVersion=_VERSION_
@@ -305,40 +428,31 @@ fi
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Developer" "$MainPackageDeveloper"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Licenses" "$MainPackageLicenses"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$MainPackage"
-		#desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFile"
-		desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackage" "$MainPackageFileNames"
+		#desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackages" "$MainPackageFile"
+		desktopFile_setParameter "AppRun.desktop" "X-AppImage-SourcePackages" "$MainPackageFileNames"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "linker,$Tag"
-	}
+	fi
 
-	[ -f AppRun ] || {
+	if [ ! -f AppRun ]; then
 		[ "$MainPackageExec" ] || {
 			echo "! Main package executable not found, using _BINARY_"
 			MainPackageExec="_BINARY_"
 		}
 
 		echo "Creating AppRun with Exec='${MainPackageExec}'..."
-		cp "$pg4l_dir/data/AppRun_linker" .
+		cp "$pg4l_dir/data/AppRun_linker" AppRun
 		
 		sed -e"s|_BINARY_|bin/$MainPackageExec|g" AppRun -i
 		chmod +x AppRun
-	}
-	cp "$pg4l_dir/util.sh" . || exit 1
-
-	# Force applications to use usr instead of opt
-	if [ -d opt ]; then
-		mkdir -p usr/
-		mv -v opt/* usr/
-		rmdir opt
 	fi
+	cp "$pg4l_dir/data/util.sh" . || exit 1
 
-
-	rm -vf usr/bin/{ar,as,nm,gprof,elfedit,ld,ld.*,objcopy,objdump,makehrtf,c++filt,addr2line,curl,*-config,*-info,png2pnm,pnm2png,ranlib,readelf,size,strings,strip,wxrc*,xml2-config,xmlcatalog,xmllint,glewinfo,visualinfo,cjpeg,desktop-file-*,djpeg,jpegtran,lua,luac,rdjpgcom,update-desktop-database,wrjpgcom}
 
 	# Actually, patch'em all, for good measure.
 	"$pg4l_dir/patchAbsolutePaths" usr/bin/*
 
 	if [ $AUTOCOPYLIBS ]; then
-		echo "Copying missling libraries..."
+		echo "Copying missing libraries..."
 		chmod +x usr/lib/*.so*
 		"$pg4l_dir/copyMissingLibraries"
 	fi
@@ -348,13 +462,15 @@ fi
 
 
 if [ "$CLEANUP" ]; then
-	rubbish="usr/include usr/share/applications usr/share/desktop-directories usr/share/pixmaps usr/share/icons usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a .INSTALL .PKGINFO"
+	rubbish="usr/include usr/share/applications usr/share/desktop-directories usr/share/pixmaps usr/share/icons usr/share/man usr/share/info usr/share/doc usr/share/mime usr/share/aclocal usr/lib/pkgconfig usr/lib/*.a"
 	for i in $rubbish; do
 		[ -e "$i" ] && {
 			echo "Deleting $i..."
 			rm -rf "$i"
 		}
 	done
+
+	cleanAppDir
 else
 	echo "Skipping cleanup"
 fi

@@ -23,7 +23,7 @@ done
 OSIMAGE="$1"
 APPIMAGE="$2"
 
-WORKDIR="/tmp/squashfs"
+WORKDIR="$(mktemp -d /tmp/runInChroot.XXXXXXXXXX)"
 MOUNTPOINT_UNION="$WORKDIR/union"
 MOUNTPOINT_UNIONFS="$WORKDIR/unionfs"
 MOUNTPOINT_ISO="$WORKDIR/iso"

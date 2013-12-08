@@ -3,6 +3,7 @@
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
 pg4l_dir=$(dirname $(readlink -f $0))
+. "$pg4l_dir/util.sh"
 
 if [ -z "$*" ]; then
 	echo "Usage: $0 [binary]"
@@ -16,10 +17,12 @@ if [ -f "$1" -a "${1##*.}" = "jar" ]; then
 	cp -v "$pg4l_dir/data/AppRun_java" AppRun || exit 1
 	desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "java"
 else
-	cp -v "$pg4l_dir"/AppRun_quick AppRun || exit 1
+	cp -v "$pg4l_dir"/data/AppRun_quick AppRun || exit 1
 fi
 
-if [ $1 ]; then
+binary="$1"
+if [ "$binary" ]; then
+	echo "Using binary $binary"
 	sed -e "s|_BINARY_|$1|g" AppRun -i
 	desktopFile_setParameter "AppRun.desktop" "Name" "$1 r1"
 	desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$1"

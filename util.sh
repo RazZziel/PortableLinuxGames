@@ -2,7 +2,14 @@
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
-die() { echo $@; exit 1; }
+GOOD=$'\e[32;01m'
+WARN=$'\e[33;01m'
+BAD=$'\e[31;01m'
+NORMAL=$'\e[0m'
+HILITE=$'\e[36;01m'
+BRACKET=$'\e[34;01m'
+
+die() { echo -e ${BAD}$@${NORMAL}; exit 1; }
 trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
 trim() { echo $@ | trimp; }
 

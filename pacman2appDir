@@ -43,12 +43,12 @@ case "$Distro" in
 			if [ -f "$1" ]; then
 				pacman -Qip "$1"
 			else
-				pacman -Si "$1"
+				yaourt -Si "$1"
 			fi
 
 		}
 		getPackageInfoField() {
-			pacman_getInfo "$1" | egrep "$2" | cut -d: -f2- | trimp
+			getPackageInfo "$1" | egrep "$2" | cut -d: -f2- | trimp
 		}
 
 		find_dependencies() {
@@ -58,12 +58,7 @@ case "$Distro" in
 			#	pkgs=(${pkgs[@]/#$pkg/${pkg%%[<>=]*}})
 			#done
 
-			parsedeps() { egrep "Depends On" | grep -v None; }
-			if [ -f "$1" ]; then
-				pacman -Qip $1 | parsedeps
-			else
-				pacman -Si $1 | parsedeps
-			fi
+			getPackageInfoField "$1" "Depends On" | grep -v None
 		}
 		getPackageName() { getPackageInfoField "$1" "Name"; }
 		getPackageVersion() { v=$(getPackageInfoField "$1" "Version"); echo ${v%-*}; }
@@ -83,7 +78,7 @@ case "$Distro" in
 				echo "Building $pkg ..."
 				mkdir -p /tmp/pacman2AppDir_build/
 				pushd /tmp/pacman2AppDir_build/ || exit 1
-					yaourt -G "$pkg" || exit 1
+					yaourt -G "$pkg" || die "Could not download package from AUR"
 					pushd "$pkg" || exit 1
 						makepkg -d || exit 1
 						f=$(echo ${pkg}*.pkg.tar.xz)
@@ -175,8 +170,7 @@ case "$Distro" in
 
 		;;
 	*)
-		echo "Distro not supported"
-		exit 1
+		die "Distro not supported"
 		;;
 esac
 
@@ -240,8 +234,7 @@ done
 
 # Download and unpack packages
 [ "$pkgs" -o "$files" ] || {
-	echo "Nothing to do";
-	exit 1;
+	die "Nothing to do";
 }
 
 [ "$files" ] && {
@@ -256,7 +249,7 @@ if [ "$pkgs" ]; then
 	case "$Distro" in
 		Arch*)
 			pkgs+=("xdg-utils")
-			ignore+=("hicolor-icon-theme" "libgl")
+			ignore+=("libgl" "hicolor-icon-theme" "gtk-update-icon-cache")
 			;;
 		Ubuntu* | Debian*)
 			pkgs+=("xdg-utils")
@@ -273,7 +266,7 @@ if [ "$pkgs" ]; then
 		done
 	done
 
-	echo "These packages will be included:"
+	echo -e ${HILITE}"These packages will be included:"${NORMAL}
 
 	for i in ${pkgs[@]}; do
 		echo "  $i"
@@ -285,9 +278,9 @@ if [ "$DOWNLOAD" ]; then
 	# Make sure all packages are downloaded
 	for pkg in ${pkgs[@]}; do
 		if [ "$INSTALLPKGS" ]; then
-			install_package "$pkg" || exit
+			install_package "$pkg" || die "Could not install package $pkg"
 		else
-			download_package "$pkg" || exit
+			download_package "$pkg" || die "Could not download package $pkg"
 		fi
 	done
 else
@@ -302,14 +295,12 @@ for i in ${pkgs[@]}; do
 	if [ -f "$file" ]; then
 		files+=" $file"
 	else
-	       	echo "!! Could not find file for package '$pkg'"
-		exit 1
+		die "!! Could not find file for package '$pkg'"
 	fi
 done
 
 [ "$files" ] || {
-	echo "!! No files found";
-	exit 1;
+	die "!! No files found";
 }
 
 MainPackageFileNames=
@@ -351,7 +342,7 @@ if [ "$UNPACK" ]; then
 	else
 		for i in $files; do
 			echo "Uncompressing $i ..."
-			uncompress_package_file "$i" || exit 1
+			uncompress_package_file "$i" || die "Could not uncompress package $i"
 		done
 	fi
 

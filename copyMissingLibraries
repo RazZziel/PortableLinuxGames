@@ -4,15 +4,12 @@
 
 EXCEPTIONS=libGL.so.1
 DESTINATION="$PWD/usr/lib/"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DESTINATION"
 
 
 findFiles() {
-	find -iname "*.so"
-	find -iname "*.so.*"
+	find "$DESTINATION" -iname "*.so"
+	find "$DESTINATION" -iname "*.so.*"
 	
-	[ -d "usr/bin/" ] && find "usr/bin/" -type f -perm /a+x
-
 	for i in $@; do
 		[ -d "$i" ] && find "$i" -type f -perm /a+x
 		[ -f "$i" ] && echo "$i"
@@ -21,8 +18,8 @@ findFiles() {
 
 extractDependencies() {
 	#objdump -p "$@" 2>/dev/null | egrep NEEDED | awk '{ print $2 }' | grep -v "$PWD" | egrep "^/" | sort | uniq
-	ldd "$@" | grep "not found" | sort | uniq >&2
-	ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
+	LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DESTINATION" ldd "$@" | grep "not found" | sort | uniq >&2
+	LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DESTINATION" ldd "$@" 2>/dev/null | grep -v "not a dynamic executable" | grep -v "^\." | grep -v "$PWD" | cut -d" " -f3 | grep "^/" | sort | uniq
 }
 
 extractRuntimeDependencies() {

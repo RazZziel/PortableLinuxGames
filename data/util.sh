@@ -8,7 +8,7 @@ get_resolution() { xrandr | grep \* | cut -d' ' -f4; }
 set_resolution() { xrandr -s $1; }
 
 run_withLocalLibs() { LD_LIBRARY_PATH="$APPDIR/usr/lib/:$LD_LIBRARY_PATH" "$@"; }
-run_shell() { if [[ $(tty) = "not a tty" ]]; then xterm -e "$@"; else $@; fi; }
+run_shell() { if tty -s <&1; then "$@"; else xterm -e "$@"; fi; }
 run_elf() { $APPRUN_HELPERS $RUNELF_HELPERS "$@"; }
 
 setup_aoss() { [ -d /proc/asound ] && export LD_PRELOAD="libaoss.so"${LD_PRELOAD:+:$LD_PRELOAD}; }

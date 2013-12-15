@@ -362,7 +362,7 @@ fi
 
 
 [ "$BRINGUP" ] && {
-	for i in $(ls -1 usr/share/applications/*.desktop 2>/dev/null); do
+	for i in $(find usr/share/applications/ -iname "*.desktop" 2>/dev/null); do
 		PackageName=$(desktopFile_getParameter "$i" "Name")
 		PackageExec=$(desktopFile_getParameter "$i" "Exec")
 		PackageIcon=$(desktopFile_getParameter "$i" "Icon")
@@ -377,10 +377,9 @@ fi
 			IconFile="./$PackageIcon"
 			[ -f "$IconFile" ] || IconFile=usr/share/pixmaps/$PackageIcon
 			[ -f "$IconFile" ] || IconFile=usr/share/icons/$PackageIcon
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.png 2>/dev/null | head -n1)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.png 2>/dev/null | head -n1)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/pixmaps/${PackageIcon}.* 2>/dev/null | head -n1)
-			[ -f "$IconFile" ] || IconFile=$(ls -1 usr/share/icons/${PackageIcon}.* 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(find usr/share/{icons,pixmaps}/ -iname "${PackageIcon}.png" 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(find usr/share/{icons,pixmaps}/ -iname "${PackageIcon}.*" 2>/dev/null | head -n1)
+			[ -f "$IconFile" ] || IconFile=$(find usr/share/{icons,pixmaps}/ -iname "${PackageIcon}" 2>/dev/null | head -n1)
 
 			if [ -f "$IconFile" ]; then
 				echo "Using icon on $IconFile"
@@ -443,9 +442,9 @@ fi
 	"$pg4l_dir/patchAbsolutePaths" usr/bin/*
 
 	if [ $AUTOCOPYLIBS ]; then
-		echo "Copying missing libraries..."
+		echo "Copying missing libraries for usr/bin/${MainPackageExec}..."
 		chmod +x usr/lib/*.so*
-		"$pg4l_dir/copyMissingLibraries"
+		"$pg4l_dir/copyMissingLibraries" "usr/bin/$MainPackageExec" "usr/lib"
 	fi
 } || {
 	echo "Skipping bringup"

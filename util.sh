@@ -9,6 +9,9 @@ NORMAL=$'\e[0m'
 HILITE=$'\e[36;01m'
 BRACKET=$'\e[34;01m'
 
+# http://stackoverflow.com/questions/6841143/how-to-set-font-color-for-stdout-and-stderr
+color()(set -o pipefail;"$@" 2>&1>&3|sed $'s,.*,\e[31m&\e[m,'>&2)3>&1
+
 die() { echo -e ${BAD}$@${NORMAL}; exit 1; }
 trimp() { sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g'; }
 trim() { echo $@ | trimp; }

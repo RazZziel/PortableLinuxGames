@@ -2,13 +2,18 @@
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
+arch="$(uname -m)"
+case "$arch" in
+	i386|i586|i686) arch="x86" ;;
+esac		
+
 AppImageAssistantDir="$(dirname $(readlink -f "$0"))/AppImageAssistant 0.9"
 [ -d "$AppImageAssistantDir" ] || { echo "Could not find $AppImageAssistantDir"; exit 1; }
 
 DesktopFile=$(ls -1 *.desktop | head -n1)
 [ -n "$DesktopFile" ] || { echo "No package found"; exit 1; }
 
-PackageName=$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2).run
+PackageName="$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2)-${arch}.run"
 
 rm -if "../$PackageName"
 echo "Building package in ../${PackageName}..."

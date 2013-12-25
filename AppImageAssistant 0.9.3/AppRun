@@ -1,0 +1,11 @@
+#!/bin/bash
+#HERE="$(dirname "$(readlink -f "${0}")")"
+##PYTHONPATH="${HERE}"/usr/share/pyshared:"$PYTHONPATH" LD_LIBRARY_PATH="${HERE}/usr/lib/:${LD_LIBRARY_PATH}" PATH="${HERE}/:${PATH}" exec "${HERE}"/AppImageAssistant $@
+
+#cd $(dirname "${0}")
+#EXEC=$(grep -m 1 -r Exec= ./*.desktop | cut -d "=" -f 2 | cut -d % -f 1)
+#PYTHONPATH=./usr/share/pyshared:"$PYTHONPATH" LD_LIBRARY_PATH="./:./usr/lib/${LD_LIBRARY_PATH}" PATH="./:${PATH}" exec $EXEC $@
+
+cd $(dirname "${0}")
+EXEC=$(grep -m 1 -r Exec= ./*.desktop | cut -d "=" -f 2 | cut -d % -f 1)
+PYTHONPATH=./usr/share/pyshared:"$PYTHONPATH" LD_LIBRARY_PATH="./:${LD_LIBRARY_PATH}" PATH="./:${PATH}" exec $EXEC $@

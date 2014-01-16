@@ -25,7 +25,7 @@ DesktopFile=$(ls -1 *.desktop | head -n1)
 
 PackageName="$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2)-${arch}.run"
 
-rm -if "../$PackageName"
+rm -if "$OutputDir/$PackageName"
 echo "Building package in $OutputDir/${PackageName}..."
 
 export LD_LIBRARY_PATH="$AppImageAssistantDir/usr/lib"

@@ -7,6 +7,16 @@ case "$arch" in
 	i386|i586|i686) arch="x86" ;;
 esac		
 
+OutputDir=..
+for i in "$@"; do
+	case "$i" in
+		-o=*)
+			OutputDir=${i#*=}
+			shift
+			;;
+	esac
+done
+
 AppImageAssistantDir="$(dirname $(readlink -f "$0"))/AppImageAssistant 0.9"
 [ -d "$AppImageAssistantDir" ] || { echo "Could not find $AppImageAssistantDir"; exit 1; }
 
@@ -16,7 +26,7 @@ DesktopFile=$(ls -1 *.desktop | head -n1)
 PackageName="$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2)-${arch}.run"
 
 rm -if "../$PackageName"
-echo "Building package in ../${PackageName}..."
+echo "Building package in $OutputDir/${PackageName}..."
 
 export LD_LIBRARY_PATH="$AppImageAssistantDir/usr/lib"
-"$AppImageAssistantDir/package" . "../$PackageName"
+"$AppImageAssistantDir/package" . "$OutputDir/$PackageName"

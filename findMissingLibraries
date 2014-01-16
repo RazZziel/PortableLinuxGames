@@ -6,6 +6,9 @@
 # It will try to run the AppRun script with strace,
 # and detect which libraries are loaded in runtime.
 
+pg4l_dir=$(dirname $(readlink -f $0))
+. "$pg4l_dir/util.sh"
+
 opt_copy=
 bin=./AppRun
 while getopts "c" arg; do
@@ -24,9 +27,9 @@ process() {
 	while read -r line; do
 		file=$(basename "$line")
 		if [ -f "usr/lib/$file" ]; then
-			echo "[ existing ]" $file
+			echo -e "[${GOOD} existing ${NORMAL}]" $file
 		else
-			echo "[ missing  ]" $file
+			echo -e "[${BAD} missing ${NORMAL}]" $file
 
 			if [ "$opt_copy" ]; then
 				cp -v "$line" "usr/lib/"

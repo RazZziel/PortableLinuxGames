@@ -174,6 +174,7 @@ case "$Distro" in
 		;;
 esac
 
+DEPENDENCIES=1
 DOWNLOAD=1
 UNPACK=1
 CLEANUP=1
@@ -195,6 +196,7 @@ MainPackageDeveloper=
 MainPackageLicenses=
 Suffix="-$Tag"
 
+declare -a mainpkgs=()
 declare -a pkgs=()
 declare -a files=()
 declare -a ignore=()
@@ -202,6 +204,7 @@ declare -a ignore=()
 # Recolect list of packages
 for i in $@; do
 	case $i in
+		--skip-dependencies) DEPENDENCIES=; shift ;;
 		--skip-download) DOWNLOAD=; shift ;;
 		--skip-unpack) UNPACK=; shift ;;
 		--skip-cleanup) CLEANUP=; shift ;;
@@ -222,15 +225,27 @@ for i in $@; do
 
 			else
 				# Argument is the name of a package
+				mainpkgs+=("$i")
 				pkgs+=("$i")
 			fi
-
-			for dep in $(find_dependencies "$i"); do
-				pkgs+=("$dep")
-			done
 			;;
 	esac
 done
+
+# Find dependencies
+if [ $DEPENDENCIES ]; then
+	for i in ${mainpkgs[@]}; do
+		pkgs+=("$i")
+		for dep in $(find_dependencies "$i"); do
+			pkgs+=("$dep")
+		done
+	done
+	for i in ${files[@]}; do
+		for dep in $(find_dependencies "$i"); do
+			pkgs+=("$dep")
+		done
+	done
+fi
 
 # Download and unpack packages
 [ "$pkgs" -o "$files" ] || {

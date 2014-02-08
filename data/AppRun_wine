@@ -58,7 +58,7 @@ done
 
 cd "$WINEPREFIX"
 if [ $CONF ]; then
-	run_withLocalLibs $APPDIR/usr/bin/winecfg $@
+	run_withLocalLibs "$APPDIR/usr/bin/winecfg" $@
 else
-	run_withLocalLibs $APPDIR/usr/bin/wine "$APPDIR/$BINARY" $BINARY_ARGS $@
+	run_withLocalLibs "$APPDIR/usr/bin/wine" "$APPDIR/$BINARY" $BINARY_ARGS $@
 fi

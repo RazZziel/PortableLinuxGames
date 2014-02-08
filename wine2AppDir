@@ -25,14 +25,14 @@ for i in $@; do
 	esac
 done
 
-cp -v "$pg4l_dir/AppRun_wine" AppRun || exit 1
-cp "$pg4l_dir/util.sh" . || exit 1
+cp -v "$pg4l_dir/data/AppRun_wine" AppRun || exit 1
+cp "$pg4l_dir/data/util.sh" . || exit 1
 for i in AppRun.desktop AppRun.png; do
-	{ [ -f "$i" ] || cp -v "$pg4l_dir"/"$i" "$i"; } || exit 1
+	{ [ -f "$i" ] || cp -v "$pg4l_dir/data/$i" "$i"; } || exit 1
 done
 
 if [ "$package" ]; then
-	sed -e "s|_WINEPREFIX_|~/.local/share/AppImage/${package}_wine|g" AppRun -i
+	sed -e "s|_WINEPREFIX_|\"\$HOME/.local/share/AppImage/${package}_wine\"|g" AppRun -i
 fi
 
 if [ "$bin" ]; then

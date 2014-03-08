@@ -17,7 +17,7 @@ export PATH="$PWD/usr/bin/:${PATH}"
 
 [ -z "$*" ] && show_usage "usage.txt"
 
-$APPDIR/usr/bin/wineserver -k
+"$APPDIR/usr/bin/wineserver" -k
 setup_keepResolution
 
 export WINEPREFIX=_WINEPREFIX_
@@ -31,7 +31,7 @@ if [ ! -d "$WINEPREFIX" ]; then
                 for i in $APPDIR/winetricks/*; do
                         ln -sf "$i" ~/.cache/winetricks/
                 done
-                $APPDIR/usr/bin/winetricks -q $WINETRICKS
+                "$APPDIR/usr/bin/winetricks" -q $WINETRICKS
         fi
 
         mkdir -p "$WINEPREFIX"

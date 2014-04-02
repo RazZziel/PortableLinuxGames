@@ -1,52 +1,26 @@
 # What the fuck?
 
-These are stand-alone executable packages.
-They have two personalities: Sometimes they think they're an ELF executable, so you can just run them and play
-these awesome games, if you have execution credentials (chmod +x [package file]). Sometimes, they think they're
-an ISO file, so you can also mount them with fuseiso, acetoneiso, or your ISO management application of choice,
-and peek what's inside.
+These are stand-alone executable packages. They have two personalities: Sometimes they think they're an ELF executable, so you can just run them and play these awesome games, if you have execution credentials (chmod +x [package file]). Sometimes, they think they're an ISO file, so you can also mount them with fuseiso, acetoneiso, or your ISO management application of choice, and peek what's inside.
 
 Inside the packages you'll find two things:
 
-A minimal installation for each game, sometimes next to i.e. a minimal Wine or Perl installation
-A little script (AppRun) to glue it all together when you run the package
-How the fuck?
-Using the awesome superpowers of PortableLinuxApps.org, and some script magic.
+A minimal installation for each game, sometimes next to i.e. a minimal Wine or Perl installation A little script (AppRun) to glue it all together when you run the package How the fuck? Using the awesome superpowers of PortableLinuxApps.org, and some script magic.
 
 # Why the fuck?
 
-Why the fuck not. I'm just a casual gamer with no space left in my laptop for games (or anything work-unrelated
-for that matter). I'm also tired of the state of release segmentation between Linux distributions, or having some
-old nightly game version I enjoyed playing every now and then stop working because the library it was linked against
-no longer exists, because my distribution decided to update it. So I discovered this AppImage thingy, and decided
-to contribute back. I like it, and I'd like to see it converted in the future of Linux package distribution.
+Why the fuck not. I'm just a casual gamer with no space left in my laptop for games (or anything work-unrelated for that matter). I'm also tired of the state of release segmentation between Linux distributions, or having some old nightly game version I enjoyed playing every now and then stop working because the library it was linked against no longer exists, because my distribution decided to update it. So I discovered this AppImage thingy, and decided to contribute back. I like it, and I'd like to see it converted in the future of Linux package distribution.
 
-I fell in love with this stuff in in the very moment it occurred to me that I could package Starcraft together with
-a minimal Wine install in an AppImage, copy it to an USB drive, take it to my college's lab (se use Ubuntu on all
-labs), and have Starcraft running right when I click on it. Move the USB drive over among some friends, and you have
-an instant Starcraft party. On Linux. And with no drugs. Like, woah.
+I fell in love with this stuff in in the very moment it occurred to me that I could package Starcraft together with a minimal Wine install in an AppImage, copy it to an USB drive, take it to my college's lab (se use Ubuntu on all labs), and have Starcraft running right when I click on it. Move the USB drive over among some friends, and you have an instant Starcraft party. On Linux. And with no drugs. Like, woah.
 
-Now I can stash the games I'm not usually playing in some external hard drive, and rescue them anytime I feel like
-playing them again, knowing that every single dependency will be still in its place.
-Also games usually take less space, because I can play them without uncompressing them, and performance
-isn't affected that much, how cool is that?
+Now I can stash the games I'm not usually playing in some external hard drive, and rescue them anytime I feel like playing them again, knowing that every single dependency will be still in its place. Also games usually take less space, because I can play them without uncompressing them, and performance isn't affected that much, how cool is that?
 
 # Who the fuck?
 
 Got any constructive feedback? Does any game fail to run in your machine? Write me to 
 
 tux AT portablelinuxgames.org
-Please note that what I'm doing here is packing some games I like, and sharing them over just in case they're 
-useful to someone else. I'm only sharing the games I think I'm free to distribute (I've also packaged some 
-commercial games I've bought, but I'm not sharing those with you guys!). If you're the owner of any of these
-games and you don't like them being here without your explicit permission, please let me know and I'll take it
-down. I just want to share something I think it's cool, I'm not taking any profit with this, other than maybe 
-Internet Karma™.
+Please note that what I'm doing here is packing some games I like, and sharing them over just in case they're useful to someone else. I'm only sharing the games I think I'm free to distribute (I've also packaged some commercial games I've bought, but I'm not sharing those with you guys!). If you're the owner of any of these games and you don't like them being here without your explicit permission, please let me know and I'll take it down. I just want to share something I think it's cool, I'm not taking any profit with this, other than maybe Internet Karma™.
 
-All these packages are working on my system (32bit ArchLinux on Dell XPS L502X), but I don't have the spare time
-to test every package as well as I should on different distros, so if any package fails to run on your machine,
-please send me an email with the exact error message and I'll try to fix it (when I find time). Or uncompress 
-the package, fix it yourself, pack it back up and share it if you want; your AppImage, your rules.
+All these packages are working on my system (32bit ArchLinux on Dell XPS L502X), but I don't have the spare time to test every package as well as I should on different distros, so if any package fails to run on your machine, please send me an email with the exact error message and I'll try to fix it (when I find time). Or uncompress the package, fix it yourself, pack it back up and share it if you want; your AppImage, your rules.
 
-Btw, if you have a pure 64bit system, please note that 32bit AppImages won't work by default. Please check this 
-tutorial to see how to configure a 64bit operative system to run 32bit AppImages.
+Btw, if you have a pure 64bit system, please note that 32bit AppImages won't work by default. Please check this tutorial to see how to configure a 64bit operative system to run 32bit AppImages.

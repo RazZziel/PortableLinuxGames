@@ -13,6 +13,7 @@ cd "$APPDIR"
 . ./util.sh
 
 export PATH="$PWD/jre1.7.0_17/bin:${PATH}"
+export LD_LIBRARY_PATH="$PWD/jre1.7.0_17/lib/i386:${LD_LIBRARY_PATH}"
 
 [ -z "$*" ] && show_usage "usage.txt"
 

@@ -6,7 +6,7 @@ export APPDIR="$(dirname "$(readlink -f "$0")")"
 export APPPKG="$(basename "$APPIMAGE")"
 LOGFILE=$(mktemp "/tmp/AppRun-log-${APPPKG}.XXXXXXXXXX")
 
-BINARY="_BINARY_"
+BINARY="./_BINARY_"
 BINARY_ARGS=
 
 cd "$APPDIR"
@@ -22,7 +22,7 @@ ret=0
 cd usr/
 {
 	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
-	run_withLocalLibs run_elf ./"$BINARY" $BINARY_ARGS $@
+	run_withLocalLibs run_elf "$BINARY" $BINARY_ARGS $@
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

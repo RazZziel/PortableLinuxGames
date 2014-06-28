@@ -32,4 +32,8 @@ desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-ID" "$appName"
 desktopFile_setParameter "AppRun.desktop" "X-AppImage-Tags" "Unity"
 
+if [ -f *_Data/Resources/UnityPlayer.png ]; then
+	convert -resize 48x *_Data/Resources/UnityPlayer.png AppRun.png
+fi
+
 #popd

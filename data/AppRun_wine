@@ -44,7 +44,10 @@ if [ ! -d "$WINEPREFIX" ]; then
 #        ln -nfs "${WINEPREFIX}/drive_c" "${WINEPREFIX}/dosdevices/c:"
 #        ln -nfs "${HOME}" "${WINEPREFIX}/dosdevices/y:"
 #        ln -nfs "/" "${WINEPREFIX}/dosdevices/z:"
-#        cp "${APPDIR}/"*.reg "${WINEPREFIX}"
+	
+	for i in "${APPDIR}/"*.reg; do
+		[ -f "$i" ] && cp -v "$i" "${WINEPREFIX}"
+	done
 fi
 
 

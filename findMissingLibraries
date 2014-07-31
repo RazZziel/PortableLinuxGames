@@ -20,7 +20,15 @@ while getopts "c" arg; do
       esac
 done
 
-bin="${1:-./AppRun}"
+bin="./AppRun"
+args=
+
+if [ -n "$1" ]; then
+	bin="$1"
+	shift
+	args=$@
+fi
+
 bin="$(readlink -f "$bin")"
 
 process() {
@@ -39,4 +47,4 @@ process() {
 }
 
 export APPRUN_HELPERS="strace"
-"$bin" | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*" | process
+"$bin" $args | egrep "open\(" | egrep -v ENOENT | egrep -v EACCESS | egrep -o "/usr/.*\\.so[^\"]*" | process

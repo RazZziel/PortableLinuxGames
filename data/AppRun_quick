@@ -20,7 +20,7 @@ setup_keepResolution
 
 ret=0
 {
-	run_withLocalLibs "$BINARY" $BINARY_ARGS $@
+	run_withLocalLibs "$BINARY" $BINARY_ARGS "$@"
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

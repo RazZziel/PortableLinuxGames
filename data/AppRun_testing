@@ -22,7 +22,7 @@ ret=0
 cd usr/
 {
 	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
-	run_withLocalLibs run_elf "$BINARY" $BINARY_ARGS $@
+	run_withLocalLibs run_elf "$BINARY" $BINARY_ARGS "$@"
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

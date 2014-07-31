@@ -21,7 +21,7 @@ setup_keepResolution
 
 ret=0
 {
-	"$BINARY" $BINARY_ARGS $@
+	"$BINARY" $BINARY_ARGS "$@"
 	ret=$?
 } 2>&1 | tee "$LOGFILE"
 

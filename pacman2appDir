@@ -65,7 +65,7 @@ case "$Distro" in
 		getPackageURL() { getPackageInfoField "$1" "URL"; }
 		getPackageDeveloper() { true; }
 		getPackageLicenses() { getPackageInfoField "$1" "Licenses"; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar.xz 2>/dev/null| head -n1; }
+		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar* 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		package_files() { pacman -Ql "$1"; }
 		install_package() { yaourt -S "$1"; }
@@ -81,7 +81,7 @@ case "$Distro" in
 					yaourt -G "$pkg" || die "Could not download package from AUR"
 					pushd "$pkg" || exit 1
 						makepkg -d || exit 1
-						f=$(echo ${pkg}*.pkg.tar.xz)
+						f=$(echo ${pkg}*.pkg.tar*)
 						sudo mv -v "$f" /var/cache/pacman/pkg/ || exit 1
 					popd
 					rm -rf "$pkg"

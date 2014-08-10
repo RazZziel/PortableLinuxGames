@@ -98,7 +98,7 @@ case "$Distro" in
 		}
 
 		cleanAppDir() {
-			rm .INSTALL .PKGINFO .MTREE
+			rm -f .INSTALL .PKGINFO .MTREE
 		}
 
 		;;

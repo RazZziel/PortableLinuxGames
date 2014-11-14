@@ -11,19 +11,22 @@ if [ -z "$*" ]; then
 fi
 
 
-package=$1; shift
-bin=$1; shift
-wineUsrPath=$1; shift
 
 TRIM=
 
 for i in $@; do
 	case $i in
-	-trim)
-		TRIM=1
-		;;
+	#-trim) TRIM=1; shift ;; # TODO getopts
+	#-name) package=$i; shift ;; # TODO getopts
 	esac
 done
+
+bin=$1; shift
+wineUsrPath=$1; shift
+package=${package:-$(basename $bin .exe)}
+
+echo "Binary: $bin"
+echo "Package name: $package"
 
 cp -v "$pg4l_dir/data/AppRun_wine" AppRun || exit 1
 cp "$pg4l_dir/data/util.sh" . || exit 1

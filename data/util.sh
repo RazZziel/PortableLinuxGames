@@ -85,11 +85,13 @@ link_overlay_setup()
 				esac
 			fi
 		done
+
+		wait
 	}
 
-	spawn "$(readlink -f "$1")" "$(readlink -fm "$2")"
-	
-	wait
+	local from="$(readlink -f "$1")"
+	local to="$(readlink -fm "$2")"
+	spawn "$from" "$to"
 }
 
 

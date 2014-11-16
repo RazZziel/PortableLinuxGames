@@ -36,6 +36,24 @@ run_keepResolution()
 	restore_resolution
 }
 
+setup_fixInvisibleMouse()
+{
+	# Workaround for https://bugs.launchpad.net/ubuntu/+source/gnome-settings-daemon/+bug/1238410
+
+	[ ! $(which gsettings 2>/dev/null) ] && return # No gsettings support
+
+	if [ "$(gsettings get org.gnome.settings-daemon.plugins.cursor active)" = "true" ]; then
+
+		restore_gsettings() {
+			gsettings set org.gnome.settings-daemon.plugins.cursor active true
+		}
+
+		trap restore_gsettings EXIT
+
+		gsettings set org.gnome.settings-daemon.plugins.cursor active false
+	fi
+}
+
 unionfs_overlay_setup()
 {
 	local ro_data_path="$(readlink -f "$1")"

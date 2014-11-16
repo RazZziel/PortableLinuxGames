@@ -10,8 +10,13 @@ BINARY="_BINARY_"
 BINARY_ARGS=
 WINETRICKS=
 
+. "$APPDIR/util.sh"
+
+# Uncomment this if the app needs relative paths specified on the command line
+#eval arguments="$(patch_relative_paths "$@")"
+#set -- "${arguments[@]}"
+
 cd "$APPDIR"
-. ./util.sh
 
 export PATH="$PWD/usr/bin/:${PATH}"
 

@@ -155,3 +155,16 @@ show_usage()
         [ -f "$usage_file" ] && cat "$usage_file"
 }
 
+patch_relative_paths()
+{
+	local output=()
+	for i in "$@"; do
+		if [ -f "$i" ]; then
+			abs="$(readlink -f "$i")"
+			echo "[AppImage] Converting parameter '$i' into '$abs'" >&2
+			i="$abs"
+		fi
+		output+=("\"$i\"")
+	done
+	echo "(${output[@]})"
+}

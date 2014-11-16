@@ -1,20 +1,10 @@
 WINE REGISTRY Version 2
 ;; All keys relative to \\Machine
 
-#arch=win32
+;; Avoid our Wine messing with the MIME associations
+;;[Software\\Microsoft\\Windows\\CurrentVersion\\RunServices]
+;;"winemenubuilder"="C:\\windows\\system32\\winemenubuilder.exe -r"
 
-[Software\\Blizzard Entertainment\\Starcraft\\DelOpt0] 1286671912
-"File0"="spc"
-"File1"="mpc"
-"Path0"="Y:\\.starcraft-icc\\characters"
-"Path1"="Y:\\.starcraft-icc\\characters"
-
-[Software\\Blizzard Entertainment\\Starcraft\\DelOpt1] 1286671912
-"File0"="sng"
-"File1"="mlt"
-"File2"="snx"
-"File3"="mlx"
-"Path0"="Y:\\.starcraft-icc\\save"
-"Path1"="Y:\\.starcraft-icc\\maps\\save"
-"Path2"="Y:\\.starcraft-icc\\save"
-"Path3"="Y:\\.starcraft-icc\\maps\\save"
+;; Avoid our Wine messing with the system at all
+[HKEY_CURRENT_USER\Software\Wine\DllOverrides] 
+"winemenubuilder.exe"=""

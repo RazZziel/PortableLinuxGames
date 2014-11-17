@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 

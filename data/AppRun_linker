@@ -15,16 +15,14 @@ BINARY_ARGS=
 #eval arguments="$(patch_relative_paths "$@")"
 #set -- "${arguments[@]}"
 
-cd "$APPDIR"
-
-export PATH="$PWD/usr/bin/:$PATH"
+export PATH="$APPDIR/usr/bin/:$PATH"
 
 [ -z "$*" ] && show_usage "usage.txt"
 
 setup_keepResolution
 
 ret=0
-cd usr/
+cd "$APPDIR/usr/"
 {
 	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
 	run_withLocalLibs $APPRUN_HELPERS $RUNELF_HELPERS "$BINARY" $BINARY_ARGS "$@"

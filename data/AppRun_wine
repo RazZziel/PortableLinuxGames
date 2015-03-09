@@ -16,9 +16,7 @@ WINETRICKS=
 #eval arguments="$(patch_relative_paths "$@")"
 #set -- "${arguments[@]}"
 
-cd "$APPDIR"
-
-export PATH="$PWD/usr/bin/:${PATH}"
+export PATH="$APPDIR/usr/bin/:${PATH}"
 
 [ -z "$*" ] && show_usage "usage.txt"
 

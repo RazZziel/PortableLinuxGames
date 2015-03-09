@@ -6,7 +6,7 @@ export APPDIR="$(dirname "$(readlink -f "$0")")"
 export APPPKG="$(basename "$APPIMAGE")"
 LOGFILE=$(mktemp "/tmp/AppRun-log-${APPPKG}.XXXXXXXXXX")
 
-BINARY="./_BINARY_"
+BINARY="$APPDIR/_BINARY_"
 BINARY_ARGS=
 
 . "$APPDIR/util.sh"
@@ -15,9 +15,7 @@ BINARY_ARGS=
 #eval arguments="$(patch_relative_paths "$@")"
 #set -- "${arguments[@]}"
 
-cd "$APPDIR"
-
-export PATH="$PWD/usr/bin/:$PATH"
+export PATH="$APPDIR/usr/bin/:$PATH"
 
 [ -z "$*" ] && show_usage "usage.txt"
 

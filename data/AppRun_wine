@@ -18,7 +18,7 @@ WINETRICKS=
 
 export PATH="$APPDIR/usr/bin/:${PATH}"
 
-[ -z "$*" ] && show_usage "usage.txt"
+[ -z "$*" ] && show_usage "$APPDIR/usage.txt"
 
 "$APPDIR/usr/bin/wineserver" -k
 setup_keepResolution

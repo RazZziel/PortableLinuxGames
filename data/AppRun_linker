@@ -17,7 +17,7 @@ BINARY_ARGS=
 
 export PATH="$APPDIR/usr/bin/:$PATH"
 
-[ -z "$*" ] && show_usage "usage.txt"
+[ -z "$*" ] && show_usage "$APPDIR/usage.txt"
 
 setup_keepResolution
 

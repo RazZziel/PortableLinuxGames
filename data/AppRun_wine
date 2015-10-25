@@ -23,7 +23,7 @@ export PATH="$APPDIR/usr/bin/:${PATH}"
 "$APPDIR/usr/bin/wineserver" -k
 setup_keepResolution
 
-export WINEPREFIX=_WINEPREFIX_
+export WINEPREFIX="_WINEPREFIX_"
 export WINEARCH="win32"
 export WINEDEBUG="-all"
 export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"

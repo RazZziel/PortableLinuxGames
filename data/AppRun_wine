@@ -28,6 +28,16 @@ export WINEARCH="win32"
 export WINEDEBUG="-all"
 export WINEDLLOVERRIDES="mshtml,mscoree=,winemenubuilder.exe=n"
 
+
+CONF=
+for i in $@; do
+	case $i in
+		@conf) CONF=1; shift ;;
+		@reset) rm -rfv "$WINEPREFIX"; shift ;;
+	esac
+done
+
+
 if [ ! -d "$WINEPREFIX" ]; then
         mkdir -p ~/.cache/winetricks/
         if [ "$WINETRICKS" ]; then
@@ -52,14 +62,6 @@ if [ ! -d "$WINEPREFIX" ]; then
 		[ -f "$i" ] && cp -v "$i" "${WINEPREFIX}"
 	done
 fi
-
-
-CONF=
-for i in $@; do
-	case $i in
-		@conf) CONF=1; shift ;;
-	esac
-done
 
 
 cd "$WINEPREFIX"

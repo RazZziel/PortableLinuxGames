@@ -61,16 +61,6 @@ atexit() {
 }
 
 
-if [ "x$OSIMAGE" == "x" ] ; then
-	echo "Please specify a ISO or squashfs base system to run the AppImage on"
-	exit 1
-fi
-
-if [ "x$APPIMAGE" == "x" ] ; then
-	echo "Please specify an AppDir or AppImage to be run"
-	exit 1
-fi
-
 mkdir -p "$MOUNTPOINT_UNIONFS/root" # Unionfs read-only
 mkdir -p "$MOUNTPOINT_UNIONFS/rw" # Unionfs rw
 mkdir -p "$MOUNTPOINT_UNION" # Overlay

@@ -23,8 +23,10 @@ done
 OSIMAGE="$1"
 APPIMAGE="$2"
 
-[ $OSIMAGE ] || { echo "Please specify an OS image"; exit 1; }
-[ $APPIMAGE ] || { echo "Please specify an AppImage or AppDir"; exit 1; }
+usage() { echo "Usage: $0 <OS image> <AppImage>"; }
+
+[ $OSIMAGE ] || { usage; exit 1; }
+#[ $APPIMAGE ] || { usage; exit 1; }
 
 WORKDIR="$(mktemp -d /tmp/runInChroot.XXXXXXXXXX)"
 MOUNTPOINT_UNION="$WORKDIR/union"

@@ -24,3 +24,5 @@ Please note that what I'm doing here is packing some games I like, and sharing t
 All these packages are working on my system (32bit ArchLinux on Dell XPS L502X), but I don't have the spare time to test every package as well as I should on different distros, so if any package fails to run on your machine, please send me an email with the exact error message and I'll try to fix it (when I find time). Or uncompress the package, fix it yourself, pack it back up and share it if you want; your AppImage, your rules.
 
 Btw, if you have a pure 64bit system, please note that 32bit AppImages won't work by default. Please check this tutorial to see how to configure a 64bit operative system to run 32bit AppImages.
+
+Join the chat at https://gitter.im/RazZziel/PortableLinuxGames

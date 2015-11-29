@@ -17,8 +17,8 @@ for i in "$@"; do
 	esac
 done
 
-AppImageAssistantDir="$(dirname $(readlink -f "$0"))/AppImageAssistant 0.9"
-[ -d "$AppImageAssistantDir" ] || { echo "Could not find $AppImageAssistantDir"; exit 1; }
+AppImageAssistant="$(dirname $(readlink -f "$0"))/AppImageAssistant.AppImage"
+[ -f "$AppImageAssistant" ] || { echo "Could not find $AppImageAssistant"; exit 1; }
 
 DesktopFile=$(ls -1 *.desktop | head -n1)
 [ -n "$DesktopFile" ] || { echo "No package found"; exit 1; }
@@ -29,4 +29,5 @@ rm -if "$OutputDir/$PackageName"
 echo "Building package in $OutputDir/${PackageName}..."
 
 export LD_LIBRARY_PATH="$AppImageAssistantDir/usr/lib"
-"$AppImageAssistantDir/package" . "$OutputDir/$PackageName"
+echo "$AppImageAssistant" --package . "$OutputDir/$PackageName"
+"$AppImageAssistant" --package . "$OutputDir/$PackageName"

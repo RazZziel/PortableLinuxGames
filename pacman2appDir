@@ -23,10 +23,12 @@ if [ -z "$*" ]; then
 fi
 
 
-Distro="$(cat /etc/issue | head -n 1)"
+Distro="$(egrep "ID_LIKE=(.*)" /etc/os-release | cut -d= -f2)"
+[ -n "$Distro" ] || Distro="$(egrep "ID=(.*)" /etc/os-release | cut -d= -f2)"
+[ -n "$Distro" ] || die "Could not find distro"
 
 case "$Distro" in
-	Arch*)
+	Arch|archlinux)
 		Tag="archlinux"
 		;;
 	Ubuntu*)
@@ -38,7 +40,7 @@ case "$Distro" in
 esac
 
 case "$Distro" in
-	Arch*)
+	Arch|archlinux)
 		getPackageInfo() {
 			if [ -f "$1" ]; then
 				pacman -Qip "$1"
@@ -170,7 +172,7 @@ case "$Distro" in
 
 		;;
 	*)
-		die "Distro not supported"
+		die "Distro ${Distro} is not supported"
 		;;
 esac
 
@@ -262,7 +264,7 @@ fi
 
 if [ "$pkgs" ]; then
 	case "$Distro" in
-		Arch*)
+		Arch|archlinux)
 			pkgs+=("xdg-utils")
 			ignore+=("libgl" "hicolor-icon-theme" "gtk-update-icon-cache")
 			;;

@@ -23,12 +23,12 @@ if [ -z "$*" ]; then
 fi
 
 
-Distro="$(egrep "ID_LIKE=(.*)" /etc/os-release | cut -d= -f2)"
-[ -n "$Distro" ] || Distro="$(egrep "ID=(.*)" /etc/os-release | cut -d= -f2)"
+Distro="$(egrep "^ID_LIKE=(.*)" /etc/os-release | cut -d= -f2)"
+[ -n "$Distro" ] || Distro="$(egrep "^ID=(.*)" /etc/os-release | cut -d= -f2)"
 [ -n "$Distro" ] || die "Could not find distro"
 
 case "$Distro" in
-	Arch|archlinux)
+	Arch|arch|archlinux)
 		Tag="archlinux"
 		;;
 	Ubuntu*)
@@ -40,12 +40,12 @@ case "$Distro" in
 esac
 
 case "$Distro" in
-	Arch|archlinux)
+	Arch|arch|archlinux)
 		getPackageInfo() {
 			if [ -f "$1" ]; then
 				pacman -Qip "$1"
 			else
-				yaourt -Si "$1"
+				yay -Si "$1"
 			fi
 
 		}
@@ -70,7 +70,7 @@ case "$Distro" in
 		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar* 2>/dev/null| head -n1; }
 		uncompress_package_file() { tar -xf $1; }
 		package_files() { pacman -Ql "$1"; }
-		install_package() { yaourt -S "$1"; }
+		install_package() { yay -S "$1"; }
 		download_package() {
 			case "$1" in
 			aur/*)
@@ -80,7 +80,7 @@ case "$Distro" in
 				echo "Building $pkg ..."
 				mkdir -p /tmp/pacman2AppDir_build/
 				pushd /tmp/pacman2AppDir_build/ || exit 1
-					yaourt -G "$pkg" || die "Could not download package from AUR"
+					yay -G "$pkg" || die "Could not download package from AUR"
 					pushd "$pkg" || exit 1
 						makepkg -d || exit 1
 						f=$(echo ${pkg}*.pkg.tar*)
@@ -264,7 +264,7 @@ fi
 
 if [ "$pkgs" ]; then
 	case "$Distro" in
-		Arch|archlinux)
+		Arch|arch|archlinux)
 			pkgs+=("xdg-utils")
 			ignore+=("libgl" "hicolor-icon-theme" "gtk-update-icon-cache")
 			;;
@@ -383,6 +383,7 @@ fi
 		PackageName=$(desktopFile_getParameter "$i" "Name")
 		PackageExec=$(desktopFile_getParameter "$i" "Exec")
 		PackageIcon=$(desktopFile_getParameter "$i" "Icon")
+		PackageCategories=$(desktopFile_getParameter "$i" "Categories")
 
 		echo "Found .desktop file '$PackageName' ($PackageExec)"
 
@@ -428,6 +429,7 @@ fi
 		cp "$pg4l_dir/data/AppRun.desktop" .
 
 		desktopFile_setParameter "AppRun.desktop" "Name" "$MainPackageName $MainPackageVersion-r1$Suffix"
+		desktopFile_setParameter "AppRun.desktop" "Categories" "$PackageCategories"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Title" "$MainPackageName"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Version" "$MainPackageVersion"
 		desktopFile_setParameter "AppRun.desktop" "X-AppImage-Release" "1"

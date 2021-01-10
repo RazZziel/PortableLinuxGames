@@ -24,7 +24,18 @@ setup_keepResolution
 ret=0
 cd "$APPDIR/usr/"
 {
-	export RUNELF_HELPERS="$APPDIR/usr/lib/ld-linux.so.2"
+	if [[ "$(file "$BINARY")" =~ ELF.*executable.*\ interpreter\ ([^,]+) ]]; then
+		linker="$APPDIR/usr/lib/$(basename "${BASH_REMATCH[1]}")"
+		if [ -f "$linker" ]; then
+			export RUNELF_HELPERS="$linker"
+		else
+			echo "!! Linker not found in $linker" >&2
+		fi
+	else
+		linker=""
+		echo "!! Could not find architecture: $(file "$BINARY")" >&2
+	fi
+
 	run_withLocalLibs $APPRUN_HELPERS $RUNELF_HELPERS "$BINARY" $BINARY_ARGS "$@"
 	ret=$?
 } 2>&1 | tee "$LOGFILE"

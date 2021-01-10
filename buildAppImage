@@ -2,32 +2,46 @@
 # Author : Ismael Barros² <ismael@barros2.org>
 # License : BSD http://en.wikipedia.org/wiki/BSD_license
 
-arch="$(uname -m)"
-case "$arch" in
-	i386|i586|i686) arch="x86" ;;
-esac		
 
-OutputDir=..
+InputDir="${1:-$PWD}"
+OutputDir="$InputDir/.."
+arch="$(uname -m)"
+
 for i in "$@"; do
 	case "$i" in
 		-o=*)
 			OutputDir=${i#*=}
 			shift
 			;;
+		-m=*)
+			arch=${i#*=}
+			shift
+			;;
 	esac
 done
 
-AppImageAssistant="$(dirname $(readlink -f "$0"))/AppImageAssistant.AppImage"
-[ -f "$AppImageAssistant" ] || { echo "Could not find $AppImageAssistant"; exit 1; }
+[ -d "$InputDir" ] || { echo "Directory $InputDir doesn't exist"; exit 1; }
 
-DesktopFile=$(ls -1 *.desktop | head -n1)
-[ -n "$DesktopFile" ] || { echo "No package found"; exit 1; }
+case "$arch" in
+	i386|i586|i686) arch="i686" ;;
+	x86_64|amd64) arch="x86_64" ;;
+esac
 
-PackageName="$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2)-${arch}.run"
+AppImageTool="$(dirname $(readlink -f "$0"))/AppImage/appimagetool-${arch}.AppImage"
+[ -f "$AppImageTool" ] || { echo "Could not find $AppImageTool"; exit 1; }
+export ARCH="$arch"
 
-rm -if "$OutputDir/$PackageName"
-echo "Building package in $OutputDir/${PackageName}..."
+DesktopFile=$(ls -1 "$InputDir"/*.desktop | head -n1)
+[ -n "$DesktopFile" ] || { echo "No *.desktop file found in $InputDir"; exit 1; }
 
-export LD_LIBRARY_PATH="$AppImageAssistantDir/usr/lib"
-echo "$AppImageAssistant" --package . "$OutputDir/$PackageName"
-"$AppImageAssistant" --package . "$OutputDir/$PackageName"
+case "$arch" in
+	i386|i586|i686) arch="x86" ;;
+esac
+
+PackageName="$(egrep Name "$DesktopFile" | head -n1 | cut -d= -f2)"
+PackagePath="$(readlink -f "$OutputDir/${PackageName}-${arch}.run")"
+
+rm -if "$PackagePath"
+echo "Building $PackagePath..."
+
+"$AppImageTool" --no-appstream "$InputDir" "$PackagePath"

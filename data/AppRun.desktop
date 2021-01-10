@@ -1,7 +1,9 @@
 [Desktop Entry]
 Name=
 Exec=AppRun
-Icon=AppRun.png
+Icon=AppRun
+Type=Application
+Categories=Game
 StartupNotify=true
 X-AppImage-Title=
 X-AppImage-Version=

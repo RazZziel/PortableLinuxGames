@@ -3,7 +3,7 @@ What is this?
 
 **PortableLinuxGames** packs and distributes great Linux games as portable, self-contained packages that will (or should) run on any Linux system out there.
 
-I uses the [AppImage](http://appimage.org/) package format, and some [script magic](https://github.com/RazZziel/PortableLinuxGames).
+It uses the [AppImage](http://appimage.org/) package format, and some [script magic](https://github.com/RazZziel/PortableLinuxGames).
 
 How does it work?
 -----------------

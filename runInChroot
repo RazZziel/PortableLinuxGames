@@ -22,14 +22,14 @@ done
 
 OSIMAGE="$1"
 APPIMAGE="$2"
-[ ! $APPIMAGE ] && [ -f AppRun ] && APPIMAGE=.
+[ ! "$APPIMAGE" ] && [ -f AppRun ] && APPIMAGE=.
 
 usage() { echo "Usage: $0 <OS image> <AppImage|AppDir>"; }
 
-[ $OSIMAGE ] || { usage; exit 1; }
-[ $APPIMAGE ] || { usage; exit 1; }
-[ -e $APPIMAGE ] || { echo "$APPIMAGE doesn't exist"; exit 1; }
-[ -d $APPIMAGE ] && [ -f $APPIMAGE/AppRun ] || { echo "$APPIMAGE/AppRun doesn't exist"; exit 1; }
+[ -n "$OSIMAGE" ] || { usage; exit 1; }
+[ -n "$APPIMAGE" ] || { usage; exit 1; }
+[ -e "$APPIMAGE" ] || { echo "$APPIMAGE doesn't exist"; exit 1; }
+[ -d "$APPIMAGE" ] && [ -f "$APPIMAGE/AppRun" ] && { echo "$APPIMAGE/AppRun doesn't exist"; exit 1; }
 
 WORKDIR="$(mktemp -d /tmp/runInChroot.XXXXXXXXXX)"
 MOUNTPOINT_UNION="$WORKDIR/union"
@@ -124,11 +124,21 @@ if [ "x$MNT" == "x" ]; then
 fi
 
 if [ -f "$APPIMAGE" ] ; then # AppImage
-	echo "Mounting AppImage $APPIMAGE"
+	[[ "$(file "$APPIMAGE")" =~ ELF.*executable.*\ interpreter ]] || { echo "Unknown AppImage file type"; exit 1; }
+
 	#RUNNABLE="/mnt/$(basename "$APPIMAGE")"
 	#sudo mount --bind "$APPIMAGE" "$MOUNTPOINT_UNION/$UNNABLE"
 	RUNNABLE="$(readlink -f "/$MNT/AppRun")"
-	sudo mount -o loop "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT"
+
+	if [[ "$(file -k "$APPIMAGE")" =~ ISO\ 9660\ CD-ROM ]]; then
+		echo "Mounting Type1 AppImage $APPIMAGE"
+		sudo mount -o loop "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT"
+	else
+		OFFSET=$(./"$APPIMAGE" --appimage-offset)
+		[ "$OFFSET" -gt 0 ] || { echo "Could not find offset on $APPIMAGE"; exit 1; }
+		echo "Mounting Type2 AppImage $APPIMAGE with offset $OFFSET"
+		sudo mount -o loop "$APPIMAGE" "$MOUNTPOINT_UNION/$MNT" -o offset=$OFFSET
+	fi
 elif [ -d "$APPIMAGE" ] ; then # AppDir
 	echo "Mounting AppDir $APPIMAGE"
 	RUNNABLE="$(readlink -f "/$MNT/AppRun")"

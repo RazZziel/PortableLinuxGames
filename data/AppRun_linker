@@ -24,7 +24,7 @@ setup_keepResolution
 ret=0
 cd "$APPDIR/usr/"
 {
-	if [[ "$(file "$BINARY")" =~ ELF.*executable.*\ interpreter\ ([^,]+) ]]; then
+	if [[ "$(file "$BINARY")" =~ ELF.*\ interpreter\ ([^,]+) ]]; then
 		linker="$APPDIR/usr/lib/$(basename "${BASH_REMATCH[1]}")"
 		if [ -f "$linker" ]; then
 			export RUNELF_HELPERS="$linker"

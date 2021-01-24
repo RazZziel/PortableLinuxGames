@@ -67,7 +67,7 @@ case "$Distro" in
 		getPackageURL() { getPackageInfoField "$1" "URL"; }
 		getPackageDeveloper() { true; }
 		getPackageLicenses() { getPackageInfoField "$1" "Licenses"; }
-		find_file_for_package() { ls -1t /var/cache/pacman/pkg/$1-?(+([^-])-)+([0-9\.])-+([^.-]).pkg.tar* 2>/dev/null| head -n1; }
+		find_file_for_package() { pacman -Swddp "$1" | sed "s|file://||"; }
 		uncompress_package_file() { tar -xf $1; }
 		package_files() { pacman -Ql "$1"; }
 		install_package() { yay -S "$1"; }
@@ -75,7 +75,7 @@ case "$Distro" in
 			case "$1" in
 			aur/*)
 				pkg=${1#*/}
-				[ $(find_file_for_package "$pkg") ] && { echo "Package $pkg already downloaded"; return; }
+				[ -f "$(find_file_for_package "$pkg")" ] && { echo "Package $pkg already downloaded"; return; }
 
 				echo "Building $pkg ..."
 				mkdir -p /tmp/pacman2AppDir_build/
